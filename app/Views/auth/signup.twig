@@ -1,0 +1,77 @@
+{# {% extends "layouts/base.twig" %}
+{% block title %}Sign up — UAFS Social{% endblock %}
+{% block body %}
+<div class="card">
+  <h2>Sign up</h2>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/signup">
+    <input type="hidden" name="_token" value="{{ csrf_token }}" />
+    <label>Display name</label>
+    <input type="text" name="display_name" required />
+    <label>Email</label>
+    <input type="email" name="email" required />
+    <label>Password</label>
+    <input type="password" name="password" required minlength="6" />
+    <label>Role</label>
+    <select name="role">
+      <option value="student" selected>Student</option>
+      <option value="faculty">Faculty</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button type="submit">Create account</button>
+  </form>
+  <p>Have an account? <a href="/login">Login</a></p>
+</div>
+{% endblock %} #}
+
+{% extends "layouts/base.twig" %}
+{% block title %}Sign up — UAFS Campfire{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <header class="auth-header">
+      <h1>UAFS Campfire</h1>
+      <p class="subtitle">Create your account</p>
+    </header>
+
+    {% if error %}
+      <div class="alert" role="alert" aria-live="polite">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/signup" novalidate>
+      <input type="hidden" name="_token" value="{{ csrf_token }}" />
+
+      <div class="field">
+        <label for="display_name">Display name</label>
+        <input id="display_name" name="display_name" type="text" required autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" minlength="6" required autocomplete="new-password" />
+        <div class="hint small">At least 6 characters.</div>
+      </div>
+
+      <div class="field">
+        <label for="role">Role</label>
+        <select id="role" name="role" required>
+          <option value="student" selected>Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      <button class="btn primary" type="submit">Create account</button>
+    </form>
+
+    <div class="muted small switch">
+      Already have an account? <a href="/login">Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

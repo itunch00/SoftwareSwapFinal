@@ -1,0 +1,61 @@
+{# {% extends "layouts/base.twig" %}
+{% block title %}Login — UAFS Social{% endblock %}
+{% block body %}
+<div class="card">
+  <h2>Login</h2>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <input type="hidden" name="_token" value="{{ csrf_token }}" />
+    <label>Email</label>
+    <input type="email" name="email" required />
+    <label>Password</label>
+    <input type="password" name="password" required />
+    <button type="submit">Login</button>
+  </form>
+  <p>No account? <a href="/signup">Sign up</a></p>
+</div>
+{% endblock %} #}
+
+{% extends "layouts/base.twig" %}
+{% block title %}Login — UAFS Campfire{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <header class="auth-header">
+      <h1>UAFS Campfire</h1>
+      <p class="subtitle">Sign in to your account</p>
+    </header>
+
+    {% if error %}
+      <div class="alert" role="alert" aria-live="polite">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/login" novalidate>
+      <input type="hidden" name="_token" value="{{ csrf_token }}" />
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password" />
+      </div>
+
+      {# <div class="row-between">
+        <label class="checkbox">
+          <input type="checkbox" name="remember" value="1" />
+          <span>Remember me</span>
+        </label>
+        <!-- (Optional) <a class="muted" href="/forgot">Forgot password?</a> -->
+      </div> #}
+
+      <button class="btn primary" type="submit">Login</button>
+    </form>
+
+    <div class="muted small switch">
+      No account? <a href="/signup">Create one</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

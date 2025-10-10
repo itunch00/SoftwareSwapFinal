@@ -1,0 +1,12 @@
+{% extends "layouts/base.twig" %}
+{% block title %}Home — UAFS Social{% endblock %}
+{% block body %}
+<div class="card">
+  <h2>Welcome, {{ user.name }}!</h2>
+  <p>Your role: {{ user.role }}</p>
+  <form method="post" action="/logout">
+    <input type="hidden" name="_token" value="{{ csrf_token }}" />
+    <button type="submit">Logout</button>
+  </form>
+</div>
+{% endblock %}

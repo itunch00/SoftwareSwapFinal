@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}UAFS Social{% endblock %}</title>
+  <style>
+    /* body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem; }
+    .card { max-width: 420px; margin: 1rem auto; padding: 1rem 1.2rem; border: 1px solid #ddd; border-radius: 10px; }
+    .error { color: #b00020; margin-bottom: .5rem; }
+    input, select { width: 100%; padding: .6rem; margin: .4rem 0 1rem; }
+    button { padding: .6rem 1rem; border: 0; border-radius: 6px; background: #2563eb; color: #fff; }
+    a { color: #2563eb; text-decoration: none; } */
+
+    .auth-wrap { min-height: 100vh; display: grid; place-items: center; background: #f7f7fb; }
+    .auth-card { width: 100%; max-width: 480px; background: #fff; padding: 28px 32px; border: 1px solid #e6e6ee; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.06); }
+    .auth-header h1 { margin: 0 0 4px; font-size: 24px; }
+    .subtitle { margin: 0 0 20px; color: #666; }
+
+    .field { margin-bottom: 14px; }
+    .field label { font-weight: 600; display: block; margin-bottom: 6px; }
+    .field input, .field select { width: 100%; padding: 10px 12px; border: 1px solid #d4d4df; border-radius: 8px; font-size: 14px; outline: none; }
+    .field input:focus, .field select:focus { border-color: #5c6ac4; box-shadow: 0 0 0 3px rgba(92,106,196,.15); }
+    .hint.small { font-size: 12px; color: #888; margin-top: 4px; }
+
+    .row-between { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 16px; }
+    .checkbox { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+    .muted { color: #666; }
+    .small { font-size: 13px; }
+
+    .btn.primary { width: 100%; padding: 12px; background: #2c6bed; color: #fff; border: 0; border-radius: 10px; font-weight: 700; cursor: pointer; }
+    .btn.primary:hover { background: #2359cc; }
+
+    .alert { background: #fde8e8; color: #b91c1c; border: 1px solid #f8c7c7; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+    .switch { text-align: center; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  {% block body %}{% endblock %}
+</body>
+</html>
