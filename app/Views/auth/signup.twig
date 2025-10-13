@@ -1,29 +1,3 @@
-{# {% extends "layouts/base.twig" %}
-{% block title %}Sign up — UAFS Social{% endblock %}
-{% block body %}
-<div class="card">
-  <h2>Sign up</h2>
-  {% if error %}<div class="error">{{ error }}</div>{% endif %}
-  <form method="post" action="/signup">
-    <input type="hidden" name="_token" value="{{ csrf_token }}" />
-    <label>Display name</label>
-    <input type="text" name="display_name" required />
-    <label>Email</label>
-    <input type="email" name="email" required />
-    <label>Password</label>
-    <input type="password" name="password" required minlength="6" />
-    <label>Role</label>
-    <select name="role">
-      <option value="student" selected>Student</option>
-      <option value="faculty">Faculty</option>
-      <option value="admin">Admin</option>
-    </select>
-    <button type="submit">Create account</button>
-  </form>
-  <p>Have an account? <a href="/login">Login</a></p>
-</div>
-{% endblock %} #}
-
 {% extends "layouts/base.twig" %}
 {% block title %}Sign up — UAFS Campfire{% endblock %}
 {% block body %}
@@ -39,7 +13,7 @@
     {% endif %}
 
     <form method="post" action="/signup" novalidate>
-      <input type="hidden" name="_token" value="{{ csrf_token }}" />
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
 
       <div class="field">
         <label for="display_name">Display name</label>

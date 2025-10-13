@@ -17,36 +17,30 @@ use App\Repositories\GroupMembershipRepository;
 
 final class Container
 {
-    /** Core */
     public PDO $db;
     public Environment $twig;
     public string $appKey;
 
-    /** App Services & Middleware */
     public AuthGuard $authGuard;
     public GroupService $groupService;
     public MembershipService $membershipService;
 
     public function __construct()
     {
-        // ---- Session (start early) ----
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            // Basic cookie hardening (set 'secure' => true when behind HTTPS)
             session_set_cookie_params([
-                'secure'   => false,
+                'secure'   => false, // set true behind HTTPS
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
             session_start();
         }
 
-        // ---- Env / App Key ----
         $this->appKey = (string)($_ENV['APP_KEY'] ?? '');
         if ($this->appKey === '') {
             throw new \RuntimeException('APP_KEY missing in .env');
         }
 
-        // ---- PDO (MariaDB) ----
         $dsn = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
             $_ENV['DB_HOST'] ?? '127.0.0.1',
@@ -65,7 +59,6 @@ final class Container
             ]
         );
 
-        // ---- Twig ----
         $loader = new FilesystemLoader(__DIR__ . '/../Views');
         $this->twig = new Environment($loader, [
             'cache' => false,
@@ -75,18 +68,18 @@ final class Container
             $this->twig->addExtension(new DebugExtension());
         }
 
-        // expose csrf_token() to Twig
-        Csrf::exposeToTwig($this->twig, $this);
+        // Make csrf_token() available in Twig
+        \App\Support\Csrf::exposeToTwig($this->twig, $this);
 
-        // ---- Middleware ----
+        // Middleware
         $this->authGuard = new AuthGuard();
 
-        // ---- Repositories ----
-        $groupRepo       = new GroupRepository($this->db);
-        $channelRepo     = new ChannelRepository($this->db);
-        $membershipRepo  = new GroupMembershipRepository($this->db);
+        // Repos
+        $groupRepo      = new GroupRepository($this->db);
+        $channelRepo    = new ChannelRepository($this->db);
+        $membershipRepo = new GroupMembershipRepository($this->db);
 
-        // ---- Services ----
+        // Services
         $this->groupService      = new GroupService($groupRepo, $channelRepo, $membershipRepo);
         $this->membershipService = new MembershipService($groupRepo, $membershipRepo);
     }

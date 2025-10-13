@@ -28,7 +28,7 @@ class AuthController
 
     public function login(): void
     {
-        \App\Support\Csrf::check($this->c, $_POST['_token'] ?? null);
+        \App\Support\Csrf::mustValidate($_POST['_token'] ?? null);
 
         $email = (string)($_POST['email'] ?? '');
         $pass  = (string)($_POST['password'] ?? '');
@@ -60,7 +60,7 @@ class AuthController
 
     public function signup(): void
     {
-        \App\Support\Csrf::check($this->c, $_POST['_token'] ?? null);
+        \App\Support\Csrf::mustValidate($_POST['_token'] ?? null);
 
         $email = (string)($_POST['email'] ?? '');
         $pass  = (string)($_POST['password'] ?? '');
@@ -80,7 +80,7 @@ class AuthController
 
     public function logout(): void
     {
-        \App\Support\Csrf::check($this->c, $_POST['_token'] ?? null);
+        \App\Support\Csrf::mustValidate($_POST['_token'] ?? null);
 
         unset($_SESSION['user']);
         session_regenerate_id(true);

@@ -1,0 +1,57 @@
+{% extends "layouts/base.twig" %}
+{% block title %}{{ group.name }} — UAFS Campfire{% endblock %}
+{% block body %}
+<div class="page-wrap">
+  <article class="page-card">
+    <header class="group-header">
+      <div>
+        <h1>{{ group.name }}</h1>
+        {% if group.description %}
+          <p class="muted">{{ group.description }}</p>
+        {% endif %}
+      </div>
+      <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
+    </header>
+
+    {% if viewer %}
+      <div class="group-actions">
+        {% if is_member %}
+          <form method="post" action="/groups/{{ group.slug }}/leave">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+            <button class="btn secondary" type="submit">Leave group</button>
+          </form>
+        {% else %}
+          <form method="post" action="/groups/{{ group.slug }}/join">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+            <button class="btn primary" type="submit">Join group</button>
+          </form>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="hint small">Sign in to join this group.</p>
+    {% endif %}
+  </article>
+
+  <section class="page-card">
+    <h2>Channels</h2>
+    {% if can_view %}
+      {% if channels %}
+        <ul class="channel-list">
+          {% for channel in channels %}
+            <li>
+              <div class="channel-name">{{ channel.name }}</div>
+              {% if channel.kind != 'general' %}
+                <span class="badge subtle">{{ channel.kind|title }}</span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No channels have been created yet.</p>
+      {% endif %}
+    {% else %}
+      <p>This group is private. Join the group to see its channels.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -47,6 +47,6 @@ final class GroupController
             return;
         }
 
-        echo $this->twig->render('groups/show.twig', $view);
+        echo $this->twig->render('groups/show.twig', $view + ['viewer' => $viewer]);
     }
 }
