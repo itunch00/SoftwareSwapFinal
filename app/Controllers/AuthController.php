@@ -20,28 +20,29 @@ class AuthController
     public function showLogin(): void
     {
         echo $this->c->twig->render('auth/login.twig', [
-            'error'      => $_SESSION['flash_error'] ?? null,
-            'csrf_token' => \App\Support\Csrf::token($this->c),
+            'error' => $_SESSION['flash_error'] ?? null,
         ]);
         unset($_SESSION['flash_error']);
     }
 
     public function login(): void
     {
-        \App\Support\Csrf::mustValidate($_POST['_token'] ?? null);
+        Csrf::mustValidate($_POST['_csrf'] ?? null);
 
         $email = (string)($_POST['email'] ?? '');
         $pass  = (string)($_POST['password'] ?? '');
 
         try {
             $user = $this->auth->login($email, $pass);
+            session_regenerate_id(true);
+
             $_SESSION['user'] = [
                 'id'    => (int)$user['id'],
                 'email' => $user['email'],
                 'name'  => $user['display_name'],
                 'role'  => $user['role'],
             ];
-            session_regenerate_id(true);
+
             header('Location: /home'); exit;
         } catch (\Throwable $e) {
             $_SESSION['flash_error'] = $e->getMessage();
@@ -52,15 +53,14 @@ class AuthController
     public function showSignup(): void
     {
         echo $this->c->twig->render('auth/signup.twig', [
-            'error'      => $_SESSION['flash_error'] ?? null,
-            'csrf_token' => \App\Support\Csrf::token($this->c),
+            'error' => $_SESSION['flash_error'] ?? null,
         ]);
         unset($_SESSION['flash_error']);
     }
 
     public function signup(): void
     {
-        \App\Support\Csrf::mustValidate($_POST['_token'] ?? null);
+        Csrf::mustValidate($_POST['_csrf'] ?? null);
 
         $email = (string)($_POST['email'] ?? '');
         $pass  = (string)($_POST['password'] ?? '');
@@ -80,7 +80,7 @@ class AuthController
 
     public function logout(): void
     {
-        \App\Support\Csrf::mustValidate($_POST['_token'] ?? null);
+        Csrf::mustValidate($_POST['_csrf'] ?? null); 
 
         unset($_SESSION['user']);
         session_regenerate_id(true);

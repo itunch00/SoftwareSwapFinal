@@ -9,6 +9,20 @@
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
       <button class="btn secondary" type="submit">Logout</button>
     </form>
+
+    <form method="POST" action="/groups" style="margin-top:1rem">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label>Name</label>
+      <input name="name" required>
+      <label>Description</label>
+      <input name="description">
+      <label>Visibility</label>
+      <select name="visibility">
+        <option value="public">public</option>
+        <option value="private">private</option>
+      </select>
+      <button type="submit">Create Group</button>
+    </form>
   </div>
 </div>
 {% endblock %}
