@@ -5,6 +5,7 @@ use App\Support\Container;
 use App\Controllers\AuthController;
 use App\Controllers\GroupController;
 use App\Controllers\MembershipController;
+use App\Controllers\ChannelController;
 use App\Support\Csrf;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -37,6 +38,7 @@ try {
     $authController       = new AuthController($c);
     $groupController      = new GroupController($c->groupService, $c->authGuard, $c->twig);
     $membershipController = new MembershipController($c->membershipService, $c->authGuard);
+    $channelController = new ChannelController($c->channelService, $c->authGuard, $c->twig);
 
     // root -> login
     if ($uri === '/' && $method === 'GET') { redirect('/login'); }
@@ -86,6 +88,19 @@ try {
     }
     if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/leave$#', $uri, $m)) {
         $membershipController->leave($m[1], $_POST); exit;
+    }
+
+    // CREATE channel
+    if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/channels$#', $uri, $m)) {
+        $channelController->create($m[1], $_POST);
+        exit;
+    }
+
+    // SHOW channel
+    if ($method === 'GET' && preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)$#', $uri, $m)) {
+        $viewer = $c->authGuard->userOrNull();
+        $channelController->show($m[1], $m[2], $viewer);
+        exit;
     }
 
     notFound();

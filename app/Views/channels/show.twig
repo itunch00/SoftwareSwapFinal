@@ -1,0 +1,14 @@
+{% extends "layouts/base.twig" %}
+
+{% block content %}
+  <div class="card">
+    <p><a href="/groups/{{ group.slug }}">&larr; Back to {{ group.name }}</a></p>
+    <h2>{{ channel.name }}</h2>
+    <p>
+      <small>Type: {{ channel.kind }}{% if channel.is_readonly %} • readonly{% endif %}</small>
+    </p>
+
+    <hr>
+    <p>No posts yet. (Next sprint)</p>
+  </div>
+{% endblock %}

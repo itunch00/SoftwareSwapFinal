@@ -9,8 +9,11 @@ use Twig\Loader\FilesystemLoader;
 use Twig\Extension\DebugExtension;
 
 use App\Middleware\AuthGuard;
+
 use App\Services\GroupService;
 use App\Services\MembershipService;
+use App\Services\ChannelService;
+
 use App\Repositories\GroupRepository;
 use App\Repositories\ChannelRepository;
 use App\Repositories\GroupMembershipRepository;
@@ -24,6 +27,7 @@ final class Container
     public AuthGuard $authGuard;
     public GroupService $groupService;
     public MembershipService $membershipService;
+    public ChannelService $channelService;
 
     public function __construct()
     {
@@ -82,5 +86,7 @@ final class Container
         // Services
         $this->groupService      = new GroupService($groupRepo, $channelRepo, $membershipRepo);
         $this->membershipService = new MembershipService($groupRepo, $membershipRepo);
+        $this->channelService = new ChannelService($groupRepo, $channelRepo, $membershipRepo);
+
     }
 }
