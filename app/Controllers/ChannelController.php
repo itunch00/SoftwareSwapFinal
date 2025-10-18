@@ -26,25 +26,34 @@ final class ChannelController
      * Access: faculty/admin only; actor must be an ACTIVE member of the group.
      * Notes: CSRF-protected. Slug is generated uniquely within the group.
      */
-    public function create(string $groupSlug, array $post): void
+        public function create(string $groupSlug, array $post): void
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
         $user = $this->auth->mustBeLoggedIn();
 
         try {
-            $res = $this->svc->createChannel($groupSlug, [
+            $payload = [
                 'name'        => (string)($post['name'] ?? ''),
                 'kind'        => (string)($post['kind'] ?? 'general'),
                 'is_readonly' => (int)($post['is_readonly'] ?? 0),
-            ], $user);
+            ];
+            $res = $this->svc->createChannel($groupSlug, $payload, $user);
 
-            header('Location: /groups/' . $res['group']['slug'] . '/channels/' . $res['slug']);
-            exit;
+            // If slug differs from name->slug (due to collision), let the user know
+            if (\App\Support\SlugHelper::fromString($payload['name']) !== $res['slug']) {
+                \App\Support\Flash::success("Channel created as “{$res['slug']}” (name adjusted to avoid duplicates).");
+            } else {
+                \App\Support\Flash::success('Channel created successfully.');
+            }
+
+            header('Location: /groups/' . $res['group']['slug'] . '/channels/' . $res['slug']); exit;
+
         } catch (\Throwable $e) {
-            http_response_code(422);
-            echo $e->getMessage();
+            \App\Support\Flash::error('Failed to create channel: ' . $e->getMessage());
+            header('Location: /groups/' . $groupSlug); exit;
         }
     }
+
 
     /**
      * Show a channel page.

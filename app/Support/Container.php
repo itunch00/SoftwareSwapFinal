@@ -77,6 +77,9 @@ final class Container
 
         // Make csrf_token() available in Twig
         \App\Support\Csrf::exposeToTwig($this->twig, $this);
+        
+        // 🔹 Expose flash() to Twig
+        \App\Support\Flash::exposeToTwig($this->twig);
 
         // Middleware
         $this->authGuard = new AuthGuard();

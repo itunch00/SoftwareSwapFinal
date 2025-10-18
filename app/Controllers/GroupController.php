@@ -6,6 +6,7 @@ namespace App\Controllers;
 use App\Services\GroupService;
 use App\Middleware\AuthGuard;
 use App\Support\Csrf;
+use App\Support\Flash;
 use Twig\Environment;
 
 final class GroupController
@@ -16,25 +17,38 @@ final class GroupController
         private Environment $twig
     ) {}
 
+    /**
+     * Handle POST /groups to create a group and redirect to its page.
+     *
+     * @param array $post Expected: _csrf, name, description?, visibility?
+     * @return void
+     */
     public function create(array $post): void
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
-
         $user = $this->auth->mustBeLoggedIn();
-        $payload = [
-            'name'        => trim((string)($post['name'] ?? '')),
-            'description' => trim((string)($post['description'] ?? '')),
-            'visibility'  => in_array(($post['visibility'] ?? 'public'), ['public','private'], true)
-                             ? $post['visibility'] : 'public',
-        ];
-        if ($payload['name'] === '') {
-            http_response_code(422);
-            echo "Group name required";
-            return;
+
+        $name = trim((string)($post['name'] ?? ''));
+        if ($name === '') {
+            Flash::error('Group name is required.');
+            header('Location: /home'); exit;
         }
 
-        $res = $this->groups->createGroup($payload, (int)$user['id']);
-        header("Location: /groups/{$res['slug']}");
+        try {
+            $res = $this->groups->createGroup([
+                'name'        => $name,
+                'description' => trim((string)($post['description'] ?? '')),
+                'visibility'  => in_array(($post['visibility'] ?? 'public'), ['public','private'], true)
+                                 ? $post['visibility'] : 'public',
+            ], (int)$user['id']);
+
+            Flash::success('Group created successfully.');
+            header('Location: /groups/' . $res['slug']); exit;
+
+        } catch (\Throwable $e) {
+            Flash::error('Failed to create group: ' . $e->getMessage());
+            header('Location: /home'); exit;
+        }
     }
 
     public function show(string $slug, ?array $viewer): void

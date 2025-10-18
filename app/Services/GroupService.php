@@ -16,7 +16,15 @@ final class GroupService
         private GroupMembershipRepository $memberships,
     ) {}
 
-    public function createGroup(array $payload, int $creatorUserId): array
+    /**
+     * Create a group and auto-join creator.
+     * Also seeds default channels (general, announcements) if none exist yet.
+     *
+     * @param array $payload   name, description?, visibility?
+     * @param int   $creatorId user id (creator)
+     * @return array{id:int, slug:string}
+     */
+    public function createGroup(array $payload, int $creatorId): array
     {
         $baseSlug = SlugHelper::fromString($payload['name']);
         $slug = $baseSlug;
@@ -31,14 +39,49 @@ final class GroupService
             'slug'        => $slug,
             'description' => $payload['description'] ?? null,
             'visibility'  => $payload['visibility'] ?? 'public',
-            'created_by'  => $creatorUserId,
+            'created_by'  => $creatorId,
         ]);
 
         // auto-join creator
-        $this->memberships->upsertActive($creatorUserId, $groupId);
+        $this->memberships->upsertActive($creatorId, $groupId);
 
-        // (optional) seed default channels later; not in this sprint
+        // seed default channels (idempotent)
+        $this->seedDefaultChannels($groupId, $creatorId);
+
         return ['id' => $groupId, 'slug' => $slug];
+    }
+
+    /**
+     * Seed standard channels if the group has no channels:
+     * - general (writable)
+     * - announcements (readonly)
+     *
+     * @param int $groupId   target group id
+     * @param int $creatorId creator user id
+     * @return void
+     */
+    private function seedDefaultChannels(int $groupId, int $creatorId): void
+    {
+        $existing = $this->channels->listByGroupId($groupId);
+        if ($existing && count($existing) > 0) return;
+
+        $this->channels->create([
+            'group_id'    => $groupId,
+            'name'        => 'general',
+            'slug'        => 'general',
+            'kind'        => 'general',
+            'is_readonly' => 0,
+            'created_by'  => $creatorId,
+        ]);
+
+        $this->channels->create([
+            'group_id'    => $groupId,
+            'name'        => 'announcements',
+            'slug'        => 'announcements',
+            'kind'        => 'announcement',
+            'is_readonly' => 1,
+            'created_by'  => $creatorId,
+        ]);
     }
 
     public function getGroupView(string $slug, ?int $viewerUserId): array
