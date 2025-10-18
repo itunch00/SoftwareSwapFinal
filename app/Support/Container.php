@@ -71,6 +71,9 @@ final class Container
         if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
             $this->twig->addExtension(new DebugExtension());
         }
+        $this->twig->addGlobal('app', [
+            'user' => $_SESSION['user'] ?? null,
+        ]);
 
         // Make csrf_token() available in Twig
         \App\Support\Csrf::exposeToTwig($this->twig, $this);

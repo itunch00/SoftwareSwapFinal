@@ -62,4 +62,26 @@ final class GroupService
             'is_member'=> $isMember,
         ];
     }
+
+    /**
+     * Return the groups the user is an ACTIVE member of, with optional member_count.
+     *
+     * @param int $userId The current user id.
+     * @return array      List of groups with ['member_count'] attached.
+     */
+    public function groupsForUser(int $userId): array
+    {
+        $rows = $this->groups->listByUserId($userId);
+        if (!$rows) return [];
+
+        $ids = array_map(fn($g) => (int)$g['id'], $rows);
+        $memberCounts = $this->groups->memberCounts($ids);
+
+        // attach counts (optional)
+        foreach ($rows as &$g) {
+            $gid = (int)$g['id'];
+            $g['member_count'] = $memberCounts[$gid] ?? 1;
+        }
+        return $rows;
+    }
 }

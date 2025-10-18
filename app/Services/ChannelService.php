@@ -17,32 +17,35 @@ final class ChannelService
     ) {}
 
     /**
-     * Create a channel in a group.
-     * Only faculty/admin may create. Must be an active member of the group.
+     * Create a channel in the given group.
+     *
+     * @param string $groupSlug Group to create in.
+     * @param array  $payload   ['name','kind','is_readonly'].
+     * @param array  $actor     Current user: ['id','role'].
+     * @return array            ['id','slug','group'] of the created channel.
+     *
+     * Throws: RuntimeException when group not found, not a member, or insufficient role.
      */
-    public function createChannel(
-        string $groupSlug,
-        array $payload,
-        array $actor // ['id'=>..., 'role'=>...]
-    ): array {
+    public function createChannel(string $groupSlug, array $payload, array $actor): array
+    {
         $group = $this->groups->findBySlug($groupSlug);
         if (!$group) {
             throw new \RuntimeException('Group not found');
         }
 
-        // Must be group member
         $isMember = $this->memberships->isMemberActive((int)$actor['id'], (int)$group['id']);
         if (!$isMember) {
             throw new \RuntimeException('Join the group before creating channels');
         }
 
-        // Role gate: only faculty/admin
         if (!in_array($actor['role'], ['faculty','admin'], true)) {
             throw new \RuntimeException('Only faculty/admin can create channels');
         }
 
         $name = trim((string)($payload['name'] ?? ''));
-        if ($name === '') throw new \RuntimeException('Channel name is required');
+        if ($name === '') {
+            throw new \RuntimeException('Channel name is required');
+        }
 
         $baseSlug = SlugHelper::fromString($name);
         $slug = $baseSlug;
@@ -56,7 +59,6 @@ final class ChannelService
         if (!in_array($kind, ['general','announcement','assignment','discussion'], true)) {
             $kind = 'general';
         }
-
         $isReadonly = (int)($payload['is_readonly'] ?? 0);
 
         $channelId = $this->channels->create([
@@ -72,31 +74,36 @@ final class ChannelService
     }
 
     /**
-     * Get a channel inside a group; respects privacy:
-     * - Public group: anyone can view channels
-     * - Private group: only members can view channels
+     * Resolve channel visibility and return view data.
+     *
+     * @param string     $groupSlug
+     * @param string     $channelSlug
+     * @param array|null $viewer
+     * @return array     ['group','channel','can_view','is_member'].
      */
-    public function getChannelView(
-        string $groupSlug,
-        string $channelSlug,
-        ?array $viewer // null allowed
-    ): array {
+    public function getChannelView(string $groupSlug, string $channelSlug, ?array $viewer): array
+    {
         $group = $this->groups->findBySlug($groupSlug);
         if (!$group) {
             return ['group' => null, 'channel' => null, 'can_view' => false, 'is_member' => false];
         }
 
-        $isMember = $viewer ? $this->memberships->isMemberActive((int)$viewer['id'], (int)$group['id']) : false;
+        $isMember = $viewer
+            ? $this->memberships->isMemberActive((int)$viewer['id'], (int)$group['id'])
+            : false;
+
         $canView = ($group['visibility'] === 'public') || $isMember;
 
-        $channel = $canView ? $this->channels->findByGroupAndSlug((int)$group['id'], $channelSlug) : null;
+        $channel = $canView
+            ? $this->channels->findByGroupAndSlug((int)$group['id'], $channelSlug)
+            : null;
 
-        // No messages yet—next sprint
         return [
             'group'     => $group,
             'channel'   => $channel,
             'can_view'  => $canView,
             'is_member' => $isMember,
+            // messages will come next sprint
         ];
     }
 }

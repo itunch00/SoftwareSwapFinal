@@ -1,28 +1,77 @@
 {% extends "layouts/base.twig" %}
 {% block title %}Home — UAFS Social{% endblock %}
+
 {% block body %}
 <div class="page-wrap">
-  <div class="page-card">
+
+  <!-- Welcome & Logout -->
+  <section class="page-card">
     <h1>Welcome, {{ user.name }}!</h1>
     <p class="muted">Role: {{ user.role|title }}</p>
-    <form method="post" action="/logout">
+
+    <form method="post" action="/logout" class="form-inline">
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
       <button class="btn secondary" type="submit">Logout</button>
     </form>
+  </section>
 
-    <form method="POST" action="/groups" style="margin-top:1rem">
+  <!-- Your Groups -->
+  <section class="page-card">
+    <h2>Your Groups</h2>
+
+    {% if your_groups and your_groups|length > 0 %}
+      <ul class="group-list">
+        {% for g in your_groups %}
+          <li class="group-item">
+            <a class="group-link" href="/groups/{{ g.slug }}">
+              <span class="group-name">{{ g.name }}</span>
+            </a>
+            {% if g.description %}
+              <div class="group-desc muted">{{ g.description }}</div>
+            {% endif %}
+            <div class="group-meta">
+              <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
+              {% if g.member_count is defined %}
+                <span class="hint small">· {{ g.member_count }} members</span>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">You’re not part of any groups yet. Create one below to get started.</p>
+    {% endif %}
+  </section>
+
+  <!-- Create Group -->
+  <section class="page-card">
+    <h2>Create a Group</h2>
+    <form method="POST" action="/groups" class="form">
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-      <label>Name</label>
-      <input name="name" required>
-      <label>Description</label>
-      <input name="description">
-      <label>Visibility</label>
-      <select name="visibility">
-        <option value="public">public</option>
-        <option value="private">private</option>
-      </select>
-      <button type="submit">Create Group</button>
+
+      <div class="form-row">
+        <label for="g-name">Name</label>
+        <input id="g-name" name="name" required placeholder="e.g., CS Seniors 2025">
+      </div>
+
+      <div class="form-row">
+        <label for="g-desc">Description <span class="muted">(optional)</span></label>
+        <input id="g-desc" name="description" placeholder="Short description">
+      </div>
+
+      <div class="form-row">
+        <label for="g-vis">Visibility</label>
+        <select id="g-vis" name="visibility">
+          <option value="public">public</option>
+          <option value="private">private</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn primary" type="submit">Create Group</button>
+      </div>
     </form>
-  </div>
+  </section>
+
 </div>
 {% endblock %}

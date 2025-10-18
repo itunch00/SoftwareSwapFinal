@@ -1,14 +1,28 @@
 {% extends "layouts/base.twig" %}
+{% block title %}{{ channel.name }} — {{ group.name }} — UAFS Social{% endblock %}
 
-{% block content %}
-  <div class="card">
-    <p><a href="/groups/{{ group.slug }}">&larr; Back to {{ group.name }}</a></p>
-    <h2>{{ channel.name }}</h2>
-    <p>
-      <small>Type: {{ channel.kind }}{% if channel.is_readonly %} • readonly{% endif %}</small>
+{% block body %}
+<div class="page-wrap">
+  <article class="page-card">
+    <p class="muted">
+      <a href="/groups/{{ group.slug }}">&larr; Back to {{ group.name }}</a>
     </p>
 
+    <header class="channel-header">
+      <h1>{{ channel.name }}</h1>
+      <div class="channel-meta">
+        <span class="badge subtle">{{ channel.kind|title }}</span>
+        {% if channel.is_readonly %}
+          <span class="badge subtle">Readonly</span>
+        {% endif %}
+      </div>
+    </header>
+
     <hr>
-    <p>No posts yet. (Next sprint)</p>
-  </div>
+
+    <section>
+      <p class="muted">No posts here yet. (We’ll add messages/announcements next sprint.)</p>
+    </section>
+  </article>
+</div>
 {% endblock %}

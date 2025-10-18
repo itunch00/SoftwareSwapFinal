@@ -38,4 +38,41 @@ final class GroupRepository
         $stmt->execute([':slug' => $slug]);
         return (bool)$stmt->fetchColumn();
     }
+
+    /** Return groups where the user has ACTIVE membership */
+    public function listByUserId(int $userId): array
+    {
+        $sql = "
+            SELECT g.*
+            FROM `groups` g
+            JOIN `group_memberships` gm
+              ON gm.group_id = g.id
+             AND gm.user_id  = :uid
+             AND gm.status   = 'active'
+            ORDER BY g.created_at DESC, g.id DESC
+        ";
+        $st = $this->db->prepare($sql);
+        $st->execute([':uid' => $userId]);
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /** quick member counts per group id list */
+    public function memberCounts(array $groupIds): array
+    {
+        if (empty($groupIds)) return [];
+        $in = implode(',', array_fill(0, count($groupIds), '?'));
+        $sql = "
+            SELECT group_id, COUNT(*) AS cnt
+            FROM group_memberships
+            WHERE status = 'active' AND group_id IN ($in)
+            GROUP BY group_id
+        ";
+        $st = $this->db->prepare($sql);
+        $st->execute(array_values($groupIds));
+        $out = [];
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $out[(int)$r['group_id']] = (int)$r['cnt'];
+        }
+        return $out;
+    }
 }

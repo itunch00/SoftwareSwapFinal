@@ -65,10 +65,16 @@ try {
 
     // protected: /home
     if ($uri === '/home' && $method === 'GET') {
-        $c->authGuard->mustBeLoggedIn();
+        $user = $c->authGuard->mustBeLoggedIn();
+        /**
+         * Fetch all groups the user belongs to for rendering on the home page.
+         */
+        $yourGroups = $c->groupService->groupsForUser((int)$user['id']);
+
         echo $c->twig->render('home.twig', [
             'user'       => $_SESSION['user'],
             'csrf_token' => Csrf::token($c),
+            'your_groups' => $yourGroups,
         ]);
         exit;
     }
