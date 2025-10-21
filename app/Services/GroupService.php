@@ -127,4 +127,15 @@ final class GroupService
         }
         return $rows;
     }
+
+    /**
+     * Public groups the user is not yet a member of (for discovery).
+     *
+     * @param int $userId
+     * @return array
+     */
+    public function discoverablePublicGroupsForUser(int $userId): array
+    {
+        return $this->groups->listPublicNotJoined($userId);
+    }
 }

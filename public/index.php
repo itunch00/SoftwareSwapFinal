@@ -68,15 +68,15 @@ try {
     // protected: /home
     if ($uri === '/home' && $method === 'GET') {
         $user = $c->authGuard->mustBeLoggedIn();
-        /**
-         * Fetch all groups the user belongs to for rendering on the home page.
-         */
-        $yourGroups = $c->groupService->groupsForUser((int)$user['id']);
+
+        $yourGroups    = $c->groupService->groupsForUser((int)$user['id']);
+        $publicGroups  = $c->groupService->discoverablePublicGroupsForUser((int)$user['id']);
 
         echo $c->twig->render('home.twig', [
-            'user'       => $_SESSION['user'],
-            'csrf_token' => Csrf::token($c),
-            'your_groups' => $yourGroups,
+            'user'          => $user,
+            'csrf_token'    => \App\Support\Csrf::token($c),
+            'your_groups'   => $yourGroups,
+            'public_groups' => $publicGroups,
         ]);
         exit;
     }

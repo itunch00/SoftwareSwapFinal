@@ -75,4 +75,28 @@ final class GroupRepository
         }
         return $out;
     }
+
+    /**
+     * List public groups the user is NOT an active member of.
+     *
+     * @param int $userId
+     * @return array
+     */
+    public function listPublicNotJoined(int $userId): array
+    {
+        $sql = "
+            SELECT g.*
+            FROM `groups` g
+            LEFT JOIN `group_memberships` gm
+            ON gm.group_id = g.id
+            AND gm.user_id  = :uid
+            AND gm.status   = 'active'
+            WHERE g.visibility = 'public'
+            AND gm.user_id IS NULL
+            ORDER BY g.created_at DESC, g.id DESC
+        ";
+        $st = $this->db->prepare($sql);
+        $st->execute([':uid' => $userId]);
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 }

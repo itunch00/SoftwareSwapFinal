@@ -44,7 +44,7 @@
   <!-- Channels list -->
   <section class="page-card">
     <h2>Channels</h2>
-    {% if can_view %}
+    {% if is_member %}
       {% if channels %}
         <ul class="channel-list">
           {% for channel in channels %}
@@ -96,7 +96,11 @@
         </form>
       {% endif %}
     {% else %}
-      <p>This group is private. Join the group to see its channels.</p>
+      <p>This group is {{ group.visibility }}. Join the group to see its channels.</p>
+      <form method="post" action="/groups/{{ group.slug }}/join">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="btn primary" type="submit">Join group</button>
+      </form>
     {% endif %}
   </section>
 </div>

@@ -92,18 +92,19 @@ final class ChannelService
             ? $this->memberships->isMemberActive((int)$viewer['id'], (int)$group['id'])
             : false;
 
-        $canView = ($group['visibility'] === 'public') || $isMember;
+        // Group page can be viewed if public OR member.
+        // But channel contents are visible ONLY for members.
+        $canViewGroup = ($group['visibility'] === 'public') || $isMember;
+        $channel = $canViewGroup ? $this->channels->findByGroupAndSlug((int)$group['id'], $channelSlug) : null;
 
-        $channel = $canView
-            ? $this->channels->findByGroupAndSlug((int)$group['id'], $channelSlug)
-            : null;
+        // Final gate: must be a member to view channel details/messages
+        $canViewChannel = $isMember;
 
         return [
             'group'     => $group,
-            'channel'   => $channel,
-            'can_view'  => $canView,
+            'channel'   => $canViewChannel ? $channel : null,
+            'can_view'  => $canViewGroup,
             'is_member' => $isMember,
-            // messages will come next sprint
         ];
     }
 }
