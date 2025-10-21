@@ -4,8 +4,11 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\ChannelService;
+use App\Services\MessageService;
 use App\Middleware\AuthGuard;
 use App\Support\Csrf;
+use App\Support\Flash;
+use App\Support\SlugHelper;
 use Twig\Environment;
 
 final class ChannelController
@@ -13,7 +16,8 @@ final class ChannelController
     public function __construct(
         private ChannelService $svc,
         private AuthGuard $auth,
-        private Environment $twig
+        private Environment $twig,
+        private MessageService $msgSvc
     ) {}
 
     /**
@@ -21,12 +25,12 @@ final class ChannelController
      *
      * @param string $groupSlug Group identifier.
      * @param array  $post      POST payload: name, kind, is_readonly, _csrf.
-     * @return void             Redirects to the created channel page or prints error (422).
+     * @return void
      *
      * Access: faculty/admin only; actor must be an ACTIVE member of the group.
      * Notes: CSRF-protected. Slug is generated uniquely within the group.
      */
-        public function create(string $groupSlug, array $post): void
+    public function create(string $groupSlug, array $post): void
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
         $user = $this->auth->mustBeLoggedIn();
@@ -37,23 +41,25 @@ final class ChannelController
                 'kind'        => (string)($post['kind'] ?? 'general'),
                 'is_readonly' => (int)($post['is_readonly'] ?? 0),
             ];
+
             $res = $this->svc->createChannel($groupSlug, $payload, $user);
 
-            // If slug differs from name->slug (due to collision), let the user know
-            if (\App\Support\SlugHelper::fromString($payload['name']) !== $res['slug']) {
-                \App\Support\Flash::success("Channel created as “{$res['slug']}” (name adjusted to avoid duplicates).");
+            // If slug differs from name→slug (collision), inform the user.
+            if (SlugHelper::fromString($payload['name']) !== $res['slug']) {
+                Flash::success("Channel created as “{$res['slug']}” (name adjusted to avoid duplicates).");
             } else {
-                \App\Support\Flash::success('Channel created successfully.');
+                Flash::success('Channel created successfully.');
             }
 
-            header('Location: /groups/' . $res['group']['slug'] . '/channels/' . $res['slug']); exit;
+            header('Location: /groups/' . $res['group']['slug'] . '/channels/' . $res['slug']);
+            exit;
 
         } catch (\Throwable $e) {
-            \App\Support\Flash::error('Failed to create channel: ' . $e->getMessage());
-            header('Location: /groups/' . $groupSlug); exit;
+            Flash::error('Failed to create channel: ' . $e->getMessage());
+            header('Location: /groups/' . $groupSlug);
+            exit;
         }
     }
-
 
     /**
      * Show a channel page.
@@ -61,7 +67,7 @@ final class ChannelController
      * @param string     $groupSlug   Group slug.
      * @param string     $channelSlug Channel slug (unique within group).
      * @param array|null $viewer      Current user (or null for guest).
-     * @return void                   Renders Twig template or proper error page.
+     * @return void                   Renders Twig template or an error page with proper status code.
      *
      * Access: Public groups are viewable by anyone; private groups require membership.
      */
@@ -69,15 +75,8 @@ final class ChannelController
     {
         $view = $this->svc->getChannelView($groupSlug, $channelSlug, $viewer);
 
-        // Group not found → 404
-        if (!$view['group']) {
-            http_response_code(404);
-            echo $this->twig->render('errors/404.twig');
-            return;
-        }
-
-        // Channel not found (in this group) → 404
-        if (!$view['channel']) {
+        // Group or channel not found → 404
+        if (!$view['group'] || !$view['channel']) {
             http_response_code(404);
             echo $this->twig->render('errors/404.twig');
             return;
@@ -92,6 +91,19 @@ final class ChannelController
             return;
         }
 
-        echo $this->twig->render('channels/show.twig', $view);
+        // Messages for this channel (basic paging could read from query params later)
+        $messages = $this->msgSvc->getMessagesForChannel($view['group'], $view['channel'], 50);
+
+        // Posting permission: must be a member AND (channel writable OR user is faculty/admin)
+        $canPost = false;
+        if ($view['is_member']) {
+            $canPost = ((int)$view['channel']['is_readonly'] === 0)
+                || ($viewer && in_array($viewer['role'], ['faculty', 'admin'], true));
+        }
+
+        echo $this->twig->render('channels/show.twig', $view + [
+            'messages' => $messages,
+            'can_post' => $canPost,
+        ]);
     }
 }

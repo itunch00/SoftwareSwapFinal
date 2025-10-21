@@ -7,6 +7,7 @@ use App\Controllers\GroupController;
 use App\Controllers\MembershipController;
 use App\Controllers\ChannelController;
 use App\Support\Csrf;
+use App\Controllers\MessageController;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -38,7 +39,8 @@ try {
     $authController       = new AuthController($c);
     $groupController      = new GroupController($c->groupService, $c->authGuard, $c->twig);
     $membershipController = new MembershipController($c->membershipService, $c->authGuard);
-    $channelController = new ChannelController($c->channelService, $c->authGuard, $c->twig);
+    $channelController = new ChannelController($c->channelService, $c->authGuard, $c->twig, $c->messageService);
+    $messageController = new MessageController($c->messageService, $c->authGuard);
 
     // root -> login
     if ($uri === '/' && $method === 'GET') { redirect('/login'); }
@@ -106,6 +108,12 @@ try {
     if ($method === 'GET' && preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)$#', $uri, $m)) {
         $viewer = $c->authGuard->userOrNull();
         $channelController->show($m[1], $m[2], $viewer);
+        exit;
+    }
+
+    // POST /groups/{group}/channels/{channel}/messages
+    if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/messages$#', $uri, $m)) {
+        $messageController->create($m[1], $m[2], $_POST);
         exit;
     }
 

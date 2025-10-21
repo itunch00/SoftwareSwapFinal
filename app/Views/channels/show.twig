@@ -3,26 +3,60 @@
 
 {% block body %}
 <div class="page-wrap">
+
+  {% set f = flash() %}
+  {% for msg in f.success ?? [] %}<div class="alert success">{{ msg }}</div>{% endfor %}
+  {% for msg in f.error ?? [] %}<div class="alert error">{{ msg }}</div>{% endfor %}
+
   <article class="page-card">
-    <p class="muted">
-      <a href="/groups/{{ group.slug }}">&larr; Back to {{ group.name }}</a>
-    </p>
+    <p class="muted"><a href="/groups/{{ group.slug }}">&larr; Back to {{ group.name }}</a></p>
 
     <header class="channel-header">
       <h1>{{ channel.name }}</h1>
       <div class="channel-meta">
         <span class="badge subtle">{{ channel.kind|title }}</span>
-        {% if channel.is_readonly %}
-          <span class="badge subtle">Readonly</span>
-        {% endif %}
+        {% if channel.is_readonly %}<span class="badge subtle">Readonly</span>{% endif %}
       </div>
     </header>
 
     <hr>
 
-    <section>
-      <p class="muted">No posts here yet. (We’ll add messages/announcements next sprint.)</p>
+    <section class="messages">
+      {% if messages and messages|length > 0 %}
+        <ul class="message-list">
+          {% for m in messages %}
+            <li class="message">
+              <div class="message-head">
+                <strong class="message-user">{{ m.user_name }}</strong>
+                <span class="message-time muted">{{ m.created_at|date('Y-m-d H:i') }}</span>
+              </div>
+              <div class="message-body">
+                {{ m.body }}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No messages yet.</p>
+      {% endif %}
     </section>
+
+    {% if can_post %}
+      <hr>
+      <form method="POST" action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages" class="form">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <div class="form-row">
+          <label for="msg-body">New message</label>
+          <textarea id="msg-body" name="body" rows="3" required placeholder="Write a message..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Send</button>
+        </div>
+      </form>
+    {% else %}
+      <p class="hint small">You can’t post in this channel.</p>
+    {% endif %}
+
   </article>
 </div>
 {% endblock %}

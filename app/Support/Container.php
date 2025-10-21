@@ -13,10 +13,12 @@ use App\Middleware\AuthGuard;
 use App\Services\GroupService;
 use App\Services\MembershipService;
 use App\Services\ChannelService;
+use App\Services\MessageService;
 
 use App\Repositories\GroupRepository;
 use App\Repositories\ChannelRepository;
 use App\Repositories\GroupMembershipRepository;
+use App\Repositories\MessageRepository;
 
 final class Container
 {
@@ -28,6 +30,7 @@ final class Container
     public GroupService $groupService;
     public MembershipService $membershipService;
     public ChannelService $channelService;
+    public MessageService $messageService;
 
     public function __construct()
     {
@@ -77,7 +80,7 @@ final class Container
 
         // Make csrf_token() available in Twig
         \App\Support\Csrf::exposeToTwig($this->twig, $this);
-        
+
         // 🔹 Expose flash() to Twig
         \App\Support\Flash::exposeToTwig($this->twig);
 
@@ -88,11 +91,13 @@ final class Container
         $groupRepo      = new GroupRepository($this->db);
         $channelRepo    = new ChannelRepository($this->db);
         $membershipRepo = new GroupMembershipRepository($this->db);
+        $messageRepo = new MessageRepository($this->db);
 
         // Services
         $this->groupService      = new GroupService($groupRepo, $channelRepo, $membershipRepo);
         $this->membershipService = new MembershipService($groupRepo, $membershipRepo);
         $this->channelService = new ChannelService($groupRepo, $channelRepo, $membershipRepo);
+        $this->messageService = new MessageService($groupRepo, $channelRepo, $membershipRepo, $messageRepo);
 
     }
 }
