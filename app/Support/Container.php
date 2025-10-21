@@ -74,9 +74,15 @@ final class Container
         if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
             $this->twig->addExtension(new DebugExtension());
         }
-        $this->twig->addGlobal('app', [
-            'user' => $_SESSION['user'] ?? null,
-        ]);
+
+        // Current path for active nav & breadcrumbs
+        $this->twig->addGlobal('current_path', parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
+
+        // Tiny helper to highlight active nav items by prefix
+        $this->twig->addFunction(new \Twig\TwigFunction('is_active', function (string $prefix): bool {
+            $cp = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+            return str_starts_with($cp, $prefix);
+        }));
 
         // Make csrf_token() available in Twig
         \App\Support\Csrf::exposeToTwig($this->twig, $this);

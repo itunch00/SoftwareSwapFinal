@@ -11,6 +11,12 @@
   <article class="page-card">
     <p class="muted"><a href="/groups/{{ group.slug }}">&larr; Back to {{ group.name }}</a></p>
 
+    <div class="breadcrumb">
+      <a href="/home">Home</a> &raquo;
+      <a href="/groups/{{ group.slug }}">{{ group.name }}</a> &raquo;
+      <span>{{ channel.name }}</span>
+    </div>
+
     <header class="channel-header">
       <h1>{{ channel.name }}</h1>
       <div class="channel-meta">

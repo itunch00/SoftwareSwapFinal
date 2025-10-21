@@ -1,0 +1,21 @@
+<nav class="topnav">
+  <div class="nav-left">
+    <a class="brand" href="/home">UAFS Social</a>
+    <a class="nav-link {{ is_active('/home') ? 'active' : '' }}" href="/home">Home</a>
+    <a class="nav-link {{ current_path == '/home#explore' ? 'active' : '' }}" href="/home#explore">Explore</a>
+    <a class="nav-link" href="/home#new-group">New Group</a>
+  </div>
+
+  <div class="nav-right">
+    {% if app.user %}
+      <span class="nav-user">Hello, {{ app.user.name }} ({{ app.user.role|title }})</span>
+      <form method="post" action="/logout" class="nav-logout-form">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="linklike" type="submit">Logout</button>
+      </form>
+    {% else %}
+      <a class="nav-link" href="/login">Login</a>
+      <a class="nav-link" href="/signup">Sign up</a>
+    {% endif %}
+  </div>
+</nav>
