@@ -6,8 +6,8 @@ use App\Controllers\AuthController;
 use App\Controllers\GroupController;
 use App\Controllers\MembershipController;
 use App\Controllers\ChannelController;
-use App\Support\Csrf;
 use App\Controllers\MessageController;
+use Twig\Environment;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -27,7 +27,11 @@ function redirect(string $path, int $code = 302): void {
     if (!str_starts_with($path, '/')) $path = '/' . ltrim($path, '/');
     header('Location: ' . $path, true, $code); exit;
 }
-function notFound(): void { send('Not Found', 404); }
+function notFound(Environment $twig): void { 
+    http_response_code(404);
+    echo $twig->render('errors/404.twig');
+    return;
+ }
 function methodNotAllowed(): void { send('Method Not Allowed', 405); }
 
 try {
@@ -41,6 +45,7 @@ try {
     $membershipController = new MembershipController($c->membershipService, $c->authGuard);
     $channelController = new ChannelController($c->channelService, $c->authGuard, $c->twig, $c->messageService);
     $messageController = new MessageController($c->messageService, $c->authGuard);
+    $twig = $c->twig;
 
     // root -> login
     if ($uri === '/' && $method === 'GET') { redirect('/login'); }
@@ -117,7 +122,7 @@ try {
         exit;
     }
 
-    notFound();
+    notFound($twig);
 } catch (Throwable $e) {
     $errorMsg = sprintf("[%s] %s in %s:%d\n%s",
         date('Y-m-d H:i:s'),

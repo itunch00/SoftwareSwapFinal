@@ -51,6 +51,13 @@ final class GroupController
         }
     }
 
+    /**
+     * Handle GET /groups/{slug} to show a group.
+     *
+     * @param string $slug
+     * @param array|null $viewer
+     * @return void
+     */
     public function show(string $slug, ?array $viewer): void
     {
         $view = $this->groups->getGroupView($slug, $viewer ? (int)$viewer['id'] : null);
