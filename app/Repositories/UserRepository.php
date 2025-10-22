@@ -32,4 +32,17 @@ class UserRepository
         ]);
         return (int)$this->db->lastInsertId();
     }
+
+    public function findById(int $id): ?array {
+        $st = $this->db->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
+        $st->execute([':id' => $id]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    /** @return void */
+    public function updateDisplayName(int $id, string $name): void {
+        $st = $this->db->prepare("UPDATE users SET display_name = :n WHERE id = :id");
+        $st->execute([':n' => $name, ':id' => $id]);
+    }
 }

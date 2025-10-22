@@ -1,0 +1,64 @@
+{% extends "layouts/base.twig" %}
+{% block title %}My Profile - UAFS Social{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  {% set f = flash() %}
+  {% for msg in f.success ?? [] %}<div class="alert success">{{ msg }}</div>{% endfor %}
+  {% for msg in f.error ?? [] %}<div class="alert error">{{ msg }}</div>{% endfor %}
+
+  <div class="page-card">
+    <div class="breadcrumb">
+      <a href="/home">Home</a> &raquo; <span>My Profile</span>
+    </div>
+
+    <h1>My Profile</h1>
+    <p class="muted">Manage how your profile appears to others.</p>
+
+    <form method="post" action="/profile" class="form" style="margin-top:1rem">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+
+      <div class="field">
+        <label for="display_name">Display name</label>
+        <input id="display_name" name="display_name" value="{{ user.display_name }}">
+      </div>
+
+      <div class="field">
+        <label for="bio">Bio</label>
+        <textarea id="bio" name="bio" rows="4" placeholder="Tell others about yourself...">{{ profile.bio ?? '' }}</textarea>
+        <div class="hint small">Max 2000 characters.</div>
+      </div>
+
+      <div class="field">
+        <label for="website">Website</label>
+        <input id="website" name="website" placeholder="https://example.com" value="{{ profile.website ?? '' }}">
+      </div>
+
+      <div class="field">
+        <label for="github">GitHub</label>
+        <input id="github" name="github" placeholder="https://github.com/username" value="{{ profile.github ?? '' }}">
+      </div>
+
+      <div class="field">
+        <label for="linkedin">LinkedIn</label>
+        <input id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/username" value="{{ profile.linkedin ?? '' }}">
+      </div>
+
+      <div class="field">
+        <label for="pronouns">Pronouns</label>
+        <input id="pronouns" name="pronouns" placeholder="e.g., she/her, he/him, they/them" value="{{ profile.pronouns ?? '' }}">
+      </div>
+
+      <div class="field">
+        <label for="timezone">Timezone</label>
+        <input id="timezone" name="timezone" placeholder="e.g., America/Chicago" value="{{ profile.timezone ?? '' }}">
+      </div>
+
+      <div class="form-actions" style="margin-top:16px;">
+        <button class="btn primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

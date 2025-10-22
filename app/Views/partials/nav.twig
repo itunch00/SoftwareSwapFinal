@@ -9,7 +9,14 @@
   <div class="nav-right">
     {% if app.user %}
       <span class="nav-user">Hello, {{ app.user.name }} ({{ app.user.role|title }})</span>
-      <form method="post" action="/logout" class="nav-logout-form">
+
+      <!-- Profile Link -->
+      <a class="nav-link {{ is_active('/me') ? 'active' : '' }}" href="/profile" title="My Profile">
+        👤 Profile
+      </a>
+
+      <!-- Logout -->
+      <form method="post" action="/logout" class="nav-logout-form" style="display:inline;">
         <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <button class="linklike" type="submit">Logout</button>
       </form>

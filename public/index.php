@@ -7,6 +7,7 @@ use App\Controllers\GroupController;
 use App\Controllers\MembershipController;
 use App\Controllers\ChannelController;
 use App\Controllers\MessageController;
+use App\Controllers\ProfileController;  
 use Twig\Environment;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -45,6 +46,7 @@ try {
     $membershipController = new MembershipController($c->membershipService, $c->authGuard);
     $channelController = new ChannelController($c->channelService, $c->authGuard, $c->twig, $c->messageService);
     $messageController = new MessageController($c->messageService, $c->authGuard);
+    $profile = new ProfileController($c->profileService, $c->authGuard, $c->twig);
     $twig = $c->twig;
 
     // root -> login
@@ -120,6 +122,16 @@ try {
     if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/messages$#', $uri, $m)) {
         $messageController->create($m[1], $m[2], $_POST);
         exit;
+    }
+
+    // GET /profile
+    if ($uri === '/profile' && $method === 'GET') {
+        $profile->me(); exit;
+    }
+
+    // POST /profile
+    if ($uri === '/profile' && $method === 'POST') {
+        $profile->update($_POST); exit;
     }
 
     notFound($twig);

@@ -14,11 +14,14 @@ use App\Services\GroupService;
 use App\Services\MembershipService;
 use App\Services\ChannelService;
 use App\Services\MessageService;
+use App\Services\ProfileService;
 
 use App\Repositories\GroupRepository;
 use App\Repositories\ChannelRepository;
 use App\Repositories\GroupMembershipRepository;
 use App\Repositories\MessageRepository;
+use App\Repositories\UserProfileRepository;
+use App\Repositories\UserRepository;
 
 final class Container
 {
@@ -31,23 +34,27 @@ final class Container
     public MembershipService $membershipService;
     public ChannelService $channelService;
     public MessageService $messageService;
+    public ProfileService $profileService;
 
     public function __construct()
     {
+        // --- Session bootstrap ---
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_set_cookie_params([
-                'secure'   => false, // set true behind HTTPS
+                'secure'   => false, // set true when behind HTTPS
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
             session_start();
         }
 
+        // --- App key ---
         $this->appKey = (string)($_ENV['APP_KEY'] ?? '');
         if ($this->appKey === '') {
             throw new \RuntimeException('APP_KEY missing in .env');
         }
 
+        // --- Database (PDO) ---
         $dsn = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
             $_ENV['DB_HOST'] ?? '127.0.0.1',
@@ -66,6 +73,7 @@ final class Container
             ]
         );
 
+        // --- Twig ---
         $loader = new FilesystemLoader(__DIR__ . '/../Views');
         $this->twig = new Environment($loader, [
             'cache' => false,
@@ -75,35 +83,38 @@ final class Container
             $this->twig->addExtension(new DebugExtension());
         }
 
-        // Current path for active nav & breadcrumbs
-        $this->twig->addGlobal('current_path', parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
+        // 🔹 Make the current user available everywhere in Twig (for navbar, etc.)
+        $this->twig->addGlobal('app', [
+            'user' => $_SESSION['user'] ?? null,
+        ]);
 
-        // Tiny helper to highlight active nav items by prefix
+        // 🔹 Current path & simple "active" helper for nav highlighting
+        $this->twig->addGlobal('current_path', parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
         $this->twig->addFunction(new \Twig\TwigFunction('is_active', function (string $prefix): bool {
             $cp = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
             return str_starts_with($cp, $prefix);
         }));
 
-        // Make csrf_token() available in Twig
+        // 🔹 Expose csrf_token() and flash() to Twig
         \App\Support\Csrf::exposeToTwig($this->twig, $this);
-
-        // 🔹 Expose flash() to Twig
         \App\Support\Flash::exposeToTwig($this->twig);
 
-        // Middleware
+        // --- Middleware ---
         $this->authGuard = new AuthGuard();
 
-        // Repos
+        // --- Repositories ---
         $groupRepo      = new GroupRepository($this->db);
         $channelRepo    = new ChannelRepository($this->db);
         $membershipRepo = new GroupMembershipRepository($this->db);
-        $messageRepo = new MessageRepository($this->db);
+        $messageRepo    = new MessageRepository($this->db);
+        $profileRepo    = new UserProfileRepository($this->db);
+        $userRepo       = new UserRepository($this->db);
 
-        // Services
+        // --- Services ---
         $this->groupService      = new GroupService($groupRepo, $channelRepo, $membershipRepo);
         $this->membershipService = new MembershipService($groupRepo, $membershipRepo);
-        $this->channelService = new ChannelService($groupRepo, $channelRepo, $membershipRepo);
-        $this->messageService = new MessageService($groupRepo, $channelRepo, $membershipRepo, $messageRepo);
-
+        $this->channelService    = new ChannelService($groupRepo, $channelRepo, $membershipRepo);
+        $this->messageService    = new MessageService($groupRepo, $channelRepo, $membershipRepo, $messageRepo);
+        $this->profileService    = new ProfileService($userRepo, $profileRepo);
     }
 }

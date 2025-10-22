@@ -52,7 +52,7 @@
   </section>
 
   <!-- Explore Public Groups -->
-  <section class="page-card">
+  <section class="page-card" id="explore">
     <h2>Explore Public Groups</h2>
 
     {% if public_groups and public_groups|length > 0 %}
@@ -82,7 +82,7 @@
   </section>
 
   <!-- Create Group -->
-  <section class="page-card">
+  <section class="page-card" id="new-group">
     <h2>Create a Group</h2>
     <form method="POST" action="/groups" class="form">
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
