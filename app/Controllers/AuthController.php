@@ -19,8 +19,30 @@ class AuthController
 
     public function showLogin(): void
     {
+        if (isset($_SESSION['user'])) { header('Location:/home'); exit; } // optional if not using GuestGuard
+
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
         echo $this->c->twig->render('auth/login.twig', [
-            'error' => $_SESSION['flash_error'] ?? null,
+            'error'      => $_SESSION['flash_error'] ?? null,
+            'csrf_token' => \App\Support\Csrf::token($this->c),
+        ]);
+        unset($_SESSION['flash_error']);
+    }
+
+    public function showSignup(): void
+    {
+        if (isset($_SESSION['user'])) { header('Location:/home'); exit; }
+
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo $this->c->twig->render('auth/signup.twig', [
+            'error'      => $_SESSION['flash_error'] ?? null,
+            'csrf_token' => \App\Support\Csrf::token($this->c),
         ]);
         unset($_SESSION['flash_error']);
     }
@@ -48,14 +70,6 @@ class AuthController
             $_SESSION['flash_error'] = $e->getMessage();
             header('Location: /login'); exit;
         }
-    }
-
-    public function showSignup(): void
-    {
-        echo $this->c->twig->render('auth/signup.twig', [
-            'error' => $_SESSION['flash_error'] ?? null,
-        ]);
-        unset($_SESSION['flash_error']);
     }
 
     public function signup(): void

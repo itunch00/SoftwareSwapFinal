@@ -9,6 +9,7 @@ use Twig\Loader\FilesystemLoader;
 use Twig\Extension\DebugExtension;
 
 use App\Middleware\AuthGuard;
+use App\Middleware\GuestGuard;
 
 use App\Services\GroupService;
 use App\Services\MembershipService;
@@ -30,6 +31,8 @@ final class Container
     public string $appKey;
 
     public AuthGuard $authGuard;
+    public GuestGuard $guestGuard;
+
     public GroupService $groupService;
     public MembershipService $membershipService;
     public ChannelService $channelService;
@@ -101,7 +104,8 @@ final class Container
 
         // --- Middleware ---
         $this->authGuard = new AuthGuard();
-
+        $this->guestGuard = new GuestGuard();
+        
         // --- Repositories ---
         $groupRepo      = new GroupRepository($this->db);
         $channelRepo    = new ChannelRepository($this->db);

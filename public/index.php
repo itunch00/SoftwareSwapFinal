@@ -54,6 +54,7 @@ try {
 
     // login
     if ($uri === '/login') {
+        $c->guestGuard->mustBeGuest();
         if ($method === 'GET')  { $authController->showLogin(); exit; }
         if ($method === 'POST') { $authController->login();     exit; }
         methodNotAllowed();
@@ -61,6 +62,7 @@ try {
 
     // signup
     if ($uri === '/signup') {
+        $c->guestGuard->mustBeGuest();
         if ($method === 'GET')  { $authController->showSignup(); exit; }
         if ($method === 'POST') { $authController->signup();     exit; }
         methodNotAllowed();
