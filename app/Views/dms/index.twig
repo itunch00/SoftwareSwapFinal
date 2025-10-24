@@ -1,0 +1,62 @@
+{% extends "layouts/base.twig" %}
+{% block title %}Messages — UAFS Social{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+  <div class="page-card">
+    <div class="breadcrumb">
+      <a href="/home">Home</a> &raquo; <span>Messages</span>
+    </div>
+
+    <h1>Messages</h1>
+
+    {% set f = flash() %}
+    {% for msg in f.success ?? [] %}<div class="alert success">{{ msg }}</div>{% endfor %}
+    {% for msg in f.error ?? [] %}<div class="alert error">{{ msg }}</div>{% endfor %}
+
+    <section style="margin-bottom:1rem;">
+      <h3>Start a new message</h3>
+      <form method="post" action="/dms/start" class="form-inline">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <label class="sr-only" for="email">User email</label>
+        <input id="email" name="email" type="email" placeholder="name@school.edu" required style="min-width:260px;">
+        <button class="btn primary" type="submit">Message</button>
+      </form>
+      <p class="muted small" style="margin-top:.25rem;">
+        Tip: you can also open directly via <code>/dms/new?user_id=&lt;id&gt;</code>
+      </p>
+    </section>
+
+    <h3>Recent conversations</h3>
+    {% if conversations and conversations|length > 0 %}
+      <ul class="channel-list">
+        {% for c in conversations %}
+          <li>
+            <div>
+              <div class="channel-name">
+                <a href="/dms/{{ c.id }}">
+                  {{ c.partner_name ?? ('User #' ~ c.partner_id) }}
+                </a>
+                <span class="muted small"> — {{ c.partner_email }}</span>
+              </div>
+
+              {% if c.last_body %}
+                <div class="muted small" title="{{ c.last_at }}">
+                  <em>{{ c.last_body|slice(0,80) ~ (c.last_body|length > 80 ? '…' : '') }}</em>
+                  <span> · {{ c.last_at|date('Y-m-d H:i') }}</span>
+                </div>
+              {% else %}
+                <div class="muted small">No messages yet.</div>
+              {% endif %}
+            </div>
+
+            <a class="btn secondary" href="/dms/{{ c.id }}">Open</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No conversations yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

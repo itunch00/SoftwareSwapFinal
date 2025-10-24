@@ -19,7 +19,7 @@ class AuthController
 
     public function showLogin(): void
     {
-        if (isset($_SESSION['user'])) { header('Location:/home'); exit; } // optional if not using GuestGuard
+        if (isset($_SESSION['user'])) { header('Location:/home'); exit; }
 
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('Pragma: no-cache');

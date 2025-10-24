@@ -1,0 +1,86 @@
+{% extends "layouts/base.twig" %}
+{% block title %}Direct Message — UAFS Social{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+  <div class="page-card">
+    <div class="breadcrumb">
+      <a href="/home">Home</a> &raquo; <a href="/dms">Messages</a> &raquo; <span>Conversation</span>
+    </div>
+
+    <h1>Direct Message</h1>
+    {% if partner %}
+      <p class="muted small">With: {{ partner.name ?? partner.display_name }} ({{ partner.email }})</p>
+    {% endif %}
+
+    <section class="messages" style="margin-top:1rem;">
+      {% if messages and messages|length > 0 %}
+        <ul class="message-list" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.75rem;max-height:60vh;overflow:auto;">
+          {% for m in messages %}
+            <li id="msg-{{ m.id }}" class="message" style="border:1px solid #e5e7eb;border-radius:10px;padding:.5rem .75rem;">
+              <div class="message-head" style="display:flex;justify-content:space-between;gap:.75rem;">
+                <strong>
+                  {{ m.sender_id == me.id ? 'You' : (partner.name ?? partner.display_name ?? ('User #' ~ m.sender_id)) }}
+                </strong>
+                <span class="muted small">{{ m.created_at|date('Y-m-d H:i') }}</span>
+              </div>
+              <div class="message-body" style="white-space:pre-wrap;">{{ m.body|e }}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No messages yet.</p>
+      {% endif %}
+
+      {# Optional "load older" link (enable if your controller/service support ?before or paging) #}
+      {# 
+      {% set oldest = messages|first %}
+      {% if oldest and oldest.id %}
+        <div style="margin-top:10px;">
+          <a class="nav-link" href="/dms/{{ conv.id }}?before={{ oldest.id }}">Load older</a>
+        </div>
+      {% endif %}
+      #}
+    </section>
+
+    <hr>
+
+    <form id="dm-form" method="POST" action="/dms/{{ conv.id }}/messages" style="display:flex;flex-direction:column;gap:.5rem;">
+      <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+      <div class="field">
+        <label for="body"><strong>Message</strong></label>
+        <textarea id="body" name="body" rows="3" required placeholder="Write a message..."></textarea>
+        <div class="muted small" style="margin-top:.25rem;">Press <kbd>Ctrl/⌘</kbd> + <kbd>Enter</kbd> to send</div>
+      </div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+        <button class="btn primary" type="submit">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // Auto-focus composer
+    var ta = document.getElementById('body');
+    if (ta) ta.focus();
+
+    // Auto-scroll to bottom of messages on load
+    var list = document.querySelector('.message-list');
+    if (list) list.scrollTop = list.scrollHeight;
+
+    // Cmd/Ctrl+Enter to submit
+    if (ta) {
+      ta.addEventListener('keydown', function (e) {
+        var isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        var combo = (isMac && e.metaKey && e.key === 'Enter') || (!isMac && e.ctrlKey && e.key === 'Enter');
+        if (combo) {
+          e.preventDefault();
+          var form = document.getElementById('dm-form');
+          if (form) form.submit();
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

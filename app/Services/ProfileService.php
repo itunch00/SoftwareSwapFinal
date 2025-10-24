@@ -35,7 +35,7 @@ final class ProfileService
      */
     public function updateMe(int $userId, array $payload): void
     {
-        // Optional: update display_name in users table (simple validation)
+        // update display_name in users table (simple validation)
         $displayName = trim((string)($payload['display_name'] ?? ''));
         if ($displayName !== '') {
             $this->users->updateDisplayName($userId, $displayName);

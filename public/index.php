@@ -8,6 +8,7 @@ use App\Controllers\MembershipController;
 use App\Controllers\ChannelController;
 use App\Controllers\MessageController;
 use App\Controllers\ProfileController;  
+use App\Controllers\DmController;
 use Twig\Environment;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -47,6 +48,7 @@ try {
     $channelController = new ChannelController($c->channelService, $c->authGuard, $c->twig, $c->messageService);
     $messageController = new MessageController($c->messageService, $c->authGuard);
     $profile = new ProfileController($c->profileService, $c->authGuard, $c->twig);
+    $dm = new DmController($c->dmService, $c->authGuard, $c->twig);
     $twig = $c->twig;
 
     // root -> login
@@ -134,6 +136,28 @@ try {
     // POST /profile
     if ($uri === '/profile' && $method === 'POST') {
         $profile->update($_POST); exit;
+    }
+
+    // GET /dms
+    if ($uri === '/dms' && $method === 'GET') { $dm->index(); exit; }
+
+    // GET /dms/new?user_id=123
+    if ($uri === '/dms/new' && $method === 'GET') { $dm->new($_GET); exit; }
+
+    // GET /dms/{id}
+    if ($method === 'GET' && preg_match('#^/dms/(\d+)$#', $uri, $m)) {
+        $dm->show((int)$m[1]); exit;
+    }
+
+    // POST /dms/{id}/messages
+    if ($method === 'POST' && preg_match('#^/dms/(\d+)/messages$#', $uri, $m)) {
+        $dm->send((int)$m[1], $_POST); exit;
+    }
+
+    // POST /dms/start
+    if ($method === 'POST' && $uri === '/dms/start') {
+        $dm->start($_POST);
+        exit;
     }
 
     notFound($twig);
