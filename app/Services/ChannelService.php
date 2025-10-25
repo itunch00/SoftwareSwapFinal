@@ -92,19 +92,38 @@ final class ChannelService
             ? $this->memberships->isMemberActive((int)$viewer['id'], (int)$group['id'])
             : false;
 
-        // Group page can be viewed if public OR member.
-        // But channel contents are visible ONLY for members.
-        $canViewGroup = ($group['visibility'] === 'public') || $isMember;
-        $channel = $canViewGroup ? $this->channels->findByGroupAndSlug((int)$group['id'], $channelSlug) : null;
+        $viewerRole = $viewer['role'] ?? 'student';
+        $isAdmin    = ($viewerRole === 'admin');
 
-        // Final gate: must be a member to view channel details/messages
-        $canViewChannel = $isMember;
+        $canViewGroup = ($group['visibility'] === 'public') || $isMember || $isAdmin;
+
+        $channel = $canViewGroup
+            ? $this->channels->findByGroupAndSlug((int)$group['id'], $channelSlug)
+            : null;
+
+        // Admins can view channel even if not a member (view-only)
+        $canViewChannel = $isMember || $isAdmin;
 
         return [
             'group'     => $group,
             'channel'   => $canViewChannel ? $channel : null,
             'can_view'  => $canViewGroup,
             'is_member' => $isMember,
+            'is_admin'  => $isAdmin,
         ];
+    }
+
+    public function deleteChannelBySlug(string $groupSlug, string $channelSlug, array $actor): array
+    {
+        if (($actor['role'] ?? 'student') !== 'admin') {
+            throw new \RuntimeException('Admin only');
+        }
+        $group = $this->groups->findBySlug($groupSlug);
+        if (!$group) throw new \RuntimeException('Group not found');
+        $ch = $this->channels->findByGroupAndSlug((int)$group['id'], $channelSlug);
+        if (!$ch) throw new \RuntimeException('Channel not found');
+
+        $this->channels->deleteById((int)$ch['id']);
+        return ['group' => $group, 'channel' => $ch];
     }
 }

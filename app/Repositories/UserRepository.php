@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use PDO;
+use DateTimeInterface;
 
 class UserRepository
 {
@@ -33,16 +34,38 @@ class UserRepository
         return (int)$this->db->lastInsertId();
     }
 
-    public function findById(int $id): ?array {
-        $st = $this->db->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
-        $st->execute([':id' => $id]);
-        $row = $st->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
-    }
-
     /** @return void */
     public function updateDisplayName(int $id, string $name): void {
         $st = $this->db->prepare("UPDATE users SET display_name = :n WHERE id = :id");
         $st->execute([':n' => $name, ':id' => $id]);
+    }
+
+    public function setBan(int $userId, ?DateTimeInterface $until, ?string $reason): void
+    {
+        $sql = "UPDATE users SET banned_until = :bu, ban_reason = :br WHERE id = :id";
+        $st  = $this->db->prepare($sql);
+        $st->bindValue(':id', $userId, PDO::PARAM_INT);
+        $st->bindValue(':bu', $until ? $until->format('Y-m-d H:i:s') : null, $until ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $st->bindValue(':br', $reason !== null ? $reason : null, $reason !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $st->execute();
+    }
+
+    public function isBanned(int $userId): bool
+    {
+        $st = $this->db->prepare("SELECT banned_until FROM users WHERE id = :id");
+        $st->bindValue(':id', $userId, PDO::PARAM_INT);
+        $st->execute();
+        $when = $st->fetchColumn();
+        if (!$when) return false;
+        return (new \DateTimeImmutable($when)) > new \DateTimeImmutable('now');
+    }
+
+    public function findById(int $id): ?array
+    {
+        $st = $this->db->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
+        $st->bindValue(':id', $id, PDO::PARAM_INT);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
     }
 }

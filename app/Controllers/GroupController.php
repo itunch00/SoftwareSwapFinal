@@ -60,7 +60,7 @@ final class GroupController
      */
     public function show(string $slug, ?array $viewer): void
     {
-        $view = $this->groups->getGroupView($slug, $viewer ? (int)$viewer['id'] : null);
+        $view = $this->groups->getGroupView($slug, $viewer);
 
         if (!$view['group']) {
             http_response_code(404);

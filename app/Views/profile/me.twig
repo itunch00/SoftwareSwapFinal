@@ -2,6 +2,7 @@
 {% block title %}My Profile - UAFS Social{% endblock %}
 
 {% block body %}
+{% set me = app.user %}
 <div class="page-wrap">
 
   {% set f = flash() %}
@@ -59,6 +60,36 @@
         <button class="btn primary" type="submit">Save changes</button>
       </div>
     </form>
+
+    {# ---------- Admin Moderation (only when viewing another user's profile) ---------- #}
+    {% if me and me.role == 'admin' and user and user.id != me.id %}
+      <hr style="margin:1.25rem 0;">
+
+      <h2 class="muted" style="font-size:1.1rem;">Admin moderation</h2>
+
+      {# Current ban status #}
+      {% if user.banned_until and user.banned_until > "now"|date('Y-m-d H:i:s') %}
+        <p class="alert alert-error" style="margin:.5rem 0 1rem;">
+          <strong>Currently banned</strong> until {{ user.banned_until }}.
+          {% if user.ban_reason %} Reason: {{ user.ban_reason }}{% endif %}
+        </p>
+        <form method="post" action="/admin/users/{{ user.id }}/unban" style="display:inline-block">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <button class="btn secondary" type="submit">Unban user</button>
+        </form>
+      {% else %}
+        <form method="post" action="/admin/users/{{ user.id }}/ban" class="form-inline" style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <label class="muted small" for="ban_days" style="margin-right:.25rem;">Ban for</label>
+          <input id="ban_days" name="days" type="number" min="1" value="3" style="width:90px;" required>
+          <span class="muted small">day(s)</span>
+          <input name="reason" type="text" placeholder="Reason (optional)" style="min-width:220px;">
+          <button class="btn danger" type="submit">Ban user</button>
+        </form>
+      {% endif %}
+    {% endif %}
+    {# ---------- /Admin Moderation ---------- #}
+
   </div>
 </div>
 {% endblock %}

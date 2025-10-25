@@ -9,6 +9,7 @@ use App\Controllers\ChannelController;
 use App\Controllers\MessageController;
 use App\Controllers\ProfileController;  
 use App\Controllers\DmController;
+use App\Controllers\AdminModerationController;
 use Twig\Environment;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -49,6 +50,7 @@ try {
     $messageController = new MessageController($c->messageService, $c->authGuard);
     $profile = new ProfileController($c->profileService, $c->authGuard, $c->twig);
     $dm = new DmController($c->dmService, $c->authGuard, $c->twig);
+    $admin = new AdminModerationController($c->moderationService, $c->authGuard, $c->groupService, $c->channelService, $c->messageService);
     $twig = $c->twig;
 
     // root -> login
@@ -80,8 +82,20 @@ try {
     if ($uri === '/home' && $method === 'GET') {
         $user = $c->authGuard->mustBeLoggedIn();
 
-        $yourGroups    = $c->groupService->groupsForUser((int)$user['id']);
-        $publicGroups  = $c->groupService->discoverablePublicGroupsForUser((int)$user['id']);
+        // NEW: for admins, send a single merged list
+        if (($user['role'] ?? 'student') === 'admin') {
+            $all = $c->groupService->listAllForAdmin();
+            echo $c->twig->render('home.twig', [
+                'user'        => $user,
+                'csrf_token'  => \App\Support\Csrf::token($c),
+                'admin_groups'=> $all,           // <-- single list for admins
+            ]);
+            exit;
+        }
+
+        // existing behavior for non-admins
+        $yourGroups   = $c->groupService->groupsForUser((int)$user['id']);
+        $publicGroups = $c->groupService->discoverablePublicGroupsForUser((int)$user['id']);
 
         echo $c->twig->render('home.twig', [
             'user'          => $user,
@@ -158,6 +172,33 @@ try {
     if ($method === 'POST' && $uri === '/dms/start') {
         $dm->start($_POST);
         exit;
+    }
+
+    // DELETE message (admin)
+    if ($method === 'POST' &&
+        preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/messages/(\d+)/delete$#', $uri, $m)) {
+        $admin->deleteMessage($m[1], $m[2], (int)$m[3], $_POST); exit;
+    }
+
+    // DELETE channel (admin)
+    if ($method === 'POST' &&
+        preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/delete$#', $uri, $m)) {
+        $admin->deleteChannel($m[1], $m[2], $_POST); exit;
+    }
+
+    // POST /admin/users/{id}/ban
+    if ($method === 'POST' && preg_match('#^/admin/users/(\d+)/ban$#', $uri, $m)) {
+        $admin->banUser((int)$m[1], $_POST); exit;
+    }
+
+    // POST /admin/users/{id}/unban
+    if ($method === 'POST' && preg_match('#^/admin/users/(\d+)/unban$#', $uri, $m)) {
+        $admin->unbanUser((int)$m[1], $_POST); exit;
+    }
+
+    // POST /admin/groups/{id}/delete
+    if ($method === 'POST' && preg_match('#^/admin/groups/(\d+)/delete$#', $uri, $m)) {
+        $admin->deleteGroup((int)$m[1], $_POST); exit;
     }
 
     notFound($twig);

@@ -2,11 +2,17 @@
 {% block title %}{{ group.name }} — UAFS Campfire{% endblock %}
 {% block body %}
 <div class="page-wrap">
-  {% set f = flash() %}
-  {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
-  {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
 
-  <!-- Group header & join/leave -->
+  {# Flash messages #}
+  {% set f = flash() %}
+  {% for msg in f.success ?? [] %}
+    <div class="alert alert-success">{{ msg }}</div>
+  {% endfor %}
+  {% for msg in f.error ?? [] %}
+    <div class="alert alert-error">{{ msg }}</div>
+  {% endfor %}
+
+  <!-- Group Header -->
   <article class="page-card">
     <div class="breadcrumb">
       <a href="/home">Home</a> &raquo; <span>{{ group.name }}</span>
@@ -20,9 +26,20 @@
         {% endif %}
       </div>
       <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
+
+      {# Admins can delete group #}
+      {% if viewer and viewer.role == 'admin' %}
+        <form method="post"
+              action="/admin/groups/{{ group.id }}/delete"
+              style="display:inline; margin-left:.5rem;">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <button class="btn danger" type="submit">Delete Group</button>
+        </form>
+      {% endif %}
     </header>
 
-    {% if viewer %}
+    {# Join/Leave section — skip entirely for admin #}
+    {% if viewer and viewer.role != 'admin' %}
       <div class="group-actions">
         {% if is_member %}
           <form method="post" action="/groups/{{ group.slug }}/leave">
@@ -36,27 +53,40 @@
           </form>
         {% endif %}
       </div>
-    {% else %}
+    {% elseif not viewer %}
       <p class="hint small">Sign in to join this group.</p>
     {% endif %}
   </article>
 
-  <!-- Channels list -->
+  <!-- 💬 Channels Section -->
   <section class="page-card">
     <h2>Channels</h2>
-    {% if is_member %}
+
+    {% if can_view %}
       {% if channels %}
         <ul class="channel-list">
           {% for channel in channels %}
             <li class="channel-item">
-              <a class="channel-link" href="/groups/{{ group.slug }}/channels/{{ channel.slug }}">
+              <a class="channel-link"
+                 href="/groups/{{ group.slug }}/channels/{{ channel.slug }}">
                 <span class="channel-name">{{ channel.name }}</span>
               </a>
+
               {% if channel.kind != 'general' %}
                 <span class="badge subtle">{{ channel.kind|title }}</span>
               {% endif %}
               {% if channel.is_readonly %}
                 <span class="badge subtle">Readonly</span>
+              {% endif %}
+
+              {# Admin delete button for channels #}
+              {% if viewer and viewer.role == 'admin' %}
+                <form method="post"
+                      action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/delete"
+                      style="display:inline;margin-left:.5rem">
+                  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                  <button class="btn danger small" type="submit" title="Delete channel">🗑️</button>
+                </form>
               {% endif %}
             </li>
           {% endfor %}
@@ -65,11 +95,13 @@
         <p class="muted">No channels have been created yet.</p>
       {% endif %}
 
-      {# Create Channel (faculty/admin only, and must be a member) #}
-      {% if viewer and is_member and viewer.role in ['faculty','admin'] %}
+      {# Channel creation — allowed for faculty or admin (member check not needed for admin) #}
+      {% if viewer and (viewer.role == 'admin' or (is_member and viewer.role == 'faculty')) %}
         <hr class="divider" />
         <h3>Create a Channel</h3>
-        <form method="post" action="/groups/{{ group.slug }}/channels" class="form form-inline">
+        <form method="post"
+              action="/groups/{{ group.slug }}/channels"
+              class="form form-inline">
           <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
           <div class="form-row">
             <label for="ch-name">Name</label>
@@ -95,12 +127,29 @@
           </div>
         </form>
       {% endif %}
+
     {% else %}
-      <p>This group is {{ group.visibility }}. Join the group to see its channels.</p>
-      <form method="post" action="/groups/{{ group.slug }}/join">
-        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-        <button class="btn primary" type="submit">Join group</button>
-      </form>
+      {# Private group but admin view fallback #}
+      {% if viewer and viewer.role == 'admin' %}
+        <p class="muted small">Admin view (you are not a member of this private group).</p>
+      {% else %}
+        <p>This group is {{ group.visibility }}. Join the group to see its channels.</p>
+        {% if viewer and viewer.role != 'admin' %}
+          <div class="group-actions">
+            {% if is_member %}
+              <form method="post" action="/groups/{{ group.slug }}/leave">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+                <button class="btn secondary" type="submit">Leave group</button>
+              </form>
+            {% else %}
+              <form method="post" action="/groups/{{ group.slug }}/join">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+                <button class="btn primary" type="submit">Join group</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endif %}
     {% endif %}
   </section>
 </div>

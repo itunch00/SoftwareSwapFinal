@@ -84,25 +84,27 @@ final class GroupService
         ]);
     }
 
-    public function getGroupView(string $slug, ?int $viewerUserId): array
+    public function getGroupView(string $slug, ?array $viewer): array
     {
         $group = $this->groups->findBySlug($slug);
         if (!$group) {
-            return ['group' => null, 'channels' => [], 'can_view' => false];
+            return ['group' => null, 'channels' => [], 'can_view' => false, 'is_member' => false];
         }
 
-        $isMember = $viewerUserId ? $this->memberships->isMemberActive($viewerUserId, (int)$group['id']) : false;
+        $viewerId   = $viewer['id']   ?? null;
+        $viewerRole = $viewer['role'] ?? 'student';
+        $isMember   = $viewerId ? $this->memberships->isMemberActive((int)$viewerId, (int)$group['id']) : false;
+        $isAdmin    = ($viewerRole === 'admin');
 
-        // Private group is discoverable, but non-members cannot see internals
-        $canView = $group['visibility'] === 'public' || $isMember;
-
+        $canView = ($group['visibility'] === 'public') || $isMember || $isAdmin;
         $channels = $canView ? $this->channels->listByGroupId((int)$group['id']) : [];
 
         return [
-            'group'    => $group,
-            'channels' => $channels,
-            'can_view' => $canView,
-            'is_member'=> $isMember,
+            'group'     => $group,
+            'channels'  => $channels,
+            'can_view'  => $canView,
+            'is_member' => $isMember,
+            'is_admin'  => $isAdmin,
         ];
     }
 
@@ -137,5 +139,15 @@ final class GroupService
     public function discoverablePublicGroupsForUser(int $userId): array
     {
         return $this->groups->listPublicNotJoined($userId);
+    }
+
+    public function listAllForAdmin(): array
+    {
+        return $this->groups->listAll();
+    }
+
+    public function deleteGroupAsAdmin(int $groupId): void
+    {
+        $this->groups->deleteById($groupId);
     }
 }

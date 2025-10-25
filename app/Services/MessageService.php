@@ -71,4 +71,13 @@ final class MessageService
     ): array {
         return $this->messages->listByChannel((int)$channel['id'], $limit, $afterId, $beforeId);
     }
+
+    public function deleteMessageById(int $id, array $actor): void
+    {
+        if (($actor['role'] ?? 'student') !== 'admin') {
+            throw new \RuntimeException('Admin only');
+        }
+        $this->messages->deleteById($id);
+    }
+
 }

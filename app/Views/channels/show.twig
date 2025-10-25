@@ -1,6 +1,6 @@
 {% extends "layouts/base.twig" %}
 {% block title %}{{ channel.name }} — {{ group.name }} — UAFS Social{% endblock %}
-
+{% set me = app.user %}
 {% block body %}
 <div class="page-wrap">
 
@@ -23,6 +23,14 @@
         <span class="badge subtle">{{ channel.kind|title }}</span>
         {% if channel.is_readonly %}<span class="badge subtle">Readonly</span>{% endif %}
       </div>
+
+      {% if me.role == 'admin' %}
+        <form method="post" action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/delete" style="display:inline; margin-left:.5rem;">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <input name="reason" type="text" placeholder="Reason (optional)" style="width:220px;">
+          <button class="btn danger" type="submit">Delete Channel</button>
+        </form>
+      {% endif %}
     </header>
 
     <hr>
@@ -35,6 +43,15 @@
               <div class="message-head">
                 <strong class="message-user">{{ m.user_name }}</strong>
                 <span class="message-time muted">{{ m.created_at|date('Y-m-d H:i') }}</span>
+
+                {% if app.user and app.user.role == 'admin' %}
+                  <form method="post"
+                        action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages/{{ m.id }}/delete"
+                        style="display:inline;margin-left:.5rem">
+                    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                    <button class="btn danger small" type="submit" title="Delete message">🗑️</button>
+                  </form>
+                {% endif %}
               </div>
               <div class="message-body">
                 {{ m.body }}

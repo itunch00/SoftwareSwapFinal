@@ -61,4 +61,20 @@ final class MessageRepository
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    public function getById(int $id): ?array
+    {
+        $st = $this->db->prepare("SELECT * FROM channel_messages WHERE id = :id LIMIT 1");
+        $st->bindValue(':id', $id, \PDO::PARAM_INT);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function deleteById(int $id): void
+    {
+        $st = $this->db->prepare("DELETE FROM `channel_messages` WHERE `id` = :id LIMIT 1");
+        $st->bindValue(':id', $id, PDO::PARAM_INT);
+        $st->execute();
+    }
 }

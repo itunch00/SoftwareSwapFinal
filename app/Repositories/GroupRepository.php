@@ -99,4 +99,17 @@ final class GroupRepository
         $st->execute([':uid' => $userId]);
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    public function listAll(): array
+    {
+        $st = $this->db->query("SELECT * FROM `groups` ORDER BY created_at DESC, id DESC");
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function deleteById(int $id): void
+    {
+        $st = $this->db->prepare("DELETE FROM `groups` WHERE id = :id LIMIT 1");
+        $st->bindValue(':id', $id, PDO::PARAM_INT);
+        $st->execute();
+    }
 }

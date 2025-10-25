@@ -77,4 +77,21 @@ final class ChannelRepository
         $st->execute([':gid' => $groupId, ':slug' => $slug]);
         return (bool)$st->fetchColumn();
     }
+
+    public function getById(int $id): ?array
+    {
+        $st = $this->db->prepare("SELECT * FROM channels WHERE id = :id LIMIT 1");
+        $st->bindValue(':id', $id, PDO::PARAM_INT);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function deleteById(int $id): void
+    {
+        $st = $this->db->prepare("DELETE FROM `channels` WHERE `id` = :id LIMIT 1");
+        $st->bindValue(':id', $id, PDO::PARAM_INT);
+        $st->execute();
+    }
+
 }

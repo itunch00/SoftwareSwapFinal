@@ -17,6 +17,7 @@ use App\Services\ChannelService;
 use App\Services\MessageService;
 use App\Services\ProfileService;
 use App\Services\DmService;
+use App\Services\ModerationService;
 
 use App\Repositories\GroupRepository;
 use App\Repositories\ChannelRepository;
@@ -26,6 +27,7 @@ use App\Repositories\UserProfileRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\DmConversationRepository;
 use App\Repositories\DmMessageRepository;
+use App\Repositories\ModerationActionRepository;
 
 final class Container
 {
@@ -42,6 +44,7 @@ final class Container
     public MessageService $messageService;
     public ProfileService $profileService;
     public DmService $dmService;
+    public ModerationService $moderationService;
 
     public function __construct()
     {
@@ -119,6 +122,7 @@ final class Container
         $userRepo       = new UserRepository($this->db);
         $dmConvRepo = new DmConversationRepository($this->db);
         $dmMsgRepo  = new DmMessageRepository($this->db);
+        $moderationActionRepo = new ModerationActionRepository($this->db);
 
         // --- Services ---
         $this->groupService      = new GroupService($groupRepo, $channelRepo, $membershipRepo);
@@ -127,5 +131,6 @@ final class Container
         $this->messageService    = new MessageService($groupRepo, $channelRepo, $membershipRepo, $messageRepo);
         $this->profileService    = new ProfileService($userRepo, $profileRepo);
         $this->dmService = new DmService($dmConvRepo, $dmMsgRepo, $userRepo);
+        $this->moderationService = new ModerationService($userRepo, $channelRepo, $messageRepo, $moderationActionRepo);
     }
 }

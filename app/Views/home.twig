@@ -19,63 +19,87 @@
     </form>
   </section>
 
-  <!-- Your Groups -->
-  <section class="page-card">
-    <h2>Your Groups</h2>
-
-    {% if your_groups and your_groups|length > 0 %}
-      <ul class="group-list">
-        {% for g in your_groups %}
-          <li class="group-item">
-            <a class="group-link" href="/groups/{{ g.slug }}">
-              <span class="group-name">{{ g.name }}</span>
-            </a>
-            {% if g.description %}
-              <div class="group-desc muted">{{ g.description }}</div>
-            {% endif %}
-            <div class="group-meta">
-              <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
-              {% if g.member_count is defined %}
-                <span class="hint small">· {{ g.member_count }} members</span>
+  {# If admin_groups is set, show a single list #}
+  {% if admin_groups is defined %}
+    <section class="page-card" id="explore">
+      <h2>All Groups</h2>
+      {% if admin_groups and admin_groups|length > 0 %}
+        <ul class="group-list">
+          {% for g in admin_groups %}
+            <li class="group-item">
+              <a class="group-link" href="/groups/{{ g.slug }}">
+                <span class="group-name">{{ g.name }}</span>
+              </a>
+              {% if g.description %}
+                <div class="group-desc muted">{{ g.description }}</div>
               {% endif %}
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="muted">You’re not part of any groups yet. Create one below to get started.</p>
-    {% endif %}
-  </section>
-
-  <!-- Explore Public Groups -->
-  <section class="page-card" id="explore">
-    <h2>Explore Public Groups</h2>
-
-    {% if public_groups and public_groups|length > 0 %}
-      <ul class="group-list">
-        {% for g in public_groups %}
-          <li class="group-item">
-            <a class="group-link" href="/groups/{{ g.slug }}">
-              <span class="group-name">{{ g.name }}</span>
-            </a>
-            {% if g.description %}
-              <div class="group-desc muted">{{ g.description }}</div>
-            {% endif %}
-            <div class="group-meta">
               <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
-            </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No groups found.</p>
+      {% endif %}
+    </section>
+  {% else %}
+    <!-- Your Groups -->
+    <section class="page-card">
+      <h2>Your Groups</h2>
 
-            <form method="post" action="/groups/{{ g.slug }}/join" class="form-inline" style="margin-top:.5rem">
-              <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-              <button class="btn primary" type="submit">Join</button>
-            </form>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="muted">No public groups to explore right now.</p>
-    {% endif %}
-  </section>
+      {% if your_groups and your_groups|length > 0 %}
+        <ul class="group-list">
+          {% for g in your_groups %}
+            <li class="group-item">
+              <a class="group-link" href="/groups/{{ g.slug }}">
+                <span class="group-name">{{ g.name }}</span>
+              </a>
+              {% if g.description %}
+                <div class="group-desc muted">{{ g.description }}</div>
+              {% endif %}
+              <div class="group-meta">
+                <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
+                {% if g.member_count is defined %}
+                  <span class="hint small">· {{ g.member_count }} members</span>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">You’re not part of any groups yet. Create one below to get started.</p>
+      {% endif %}
+    </section>
+
+    <!-- Explore Public Groups -->
+    <section class="page-card" id="explore">
+      <h2>Explore Public Groups</h2>
+
+      {% if public_groups and public_groups|length > 0 %}
+        <ul class="group-list">
+          {% for g in public_groups %}
+            <li class="group-item">
+              <a class="group-link" href="/groups/{{ g.slug }}">
+                <span class="group-name">{{ g.name }}</span>
+              </a>
+              {% if g.description %}
+                <div class="group-desc muted">{{ g.description }}</div>
+              {% endif %}
+              <div class="group-meta">
+                <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
+              </div>
+
+              <form method="post" action="/groups/{{ g.slug }}/join" class="form-inline" style="margin-top:.5rem">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="btn primary" type="submit">Join</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No public groups to explore right now.</p>
+      {% endif %}
+    </section>
+  {% endif %}
 
   <!-- Create Group -->
   <section class="page-card" id="new-group">
