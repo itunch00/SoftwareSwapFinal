@@ -11,8 +11,8 @@
     <h1>Messages</h1>
 
     {% set f = flash() %}
-    {% for msg in f.success ?? [] %}<div class="alert success">{{ msg }}</div>{% endfor %}
-    {% for msg in f.error ?? [] %}<div class="alert error">{{ msg }}</div>{% endfor %}
+    {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+    {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
 
     <section style="margin-bottom:1rem;">
       <h3>Start a new message</h3>

@@ -6,7 +6,6 @@ namespace App\Controllers;
 use App\Services\DmService;
 use App\Middleware\AuthGuard;
 use App\Support\Csrf;
-use App\Support\Flash;
 use Twig\Environment;
 
 final class DmController
@@ -17,19 +16,19 @@ final class DmController
         private Environment $twig
     ) {}
 
-    /** GET /dms — list conversations */
+    /** GET /dms - list conversations */
     public function index(): void
     {
         $user  = $this->auth->mustBeLoggedIn();
         $convs = $this->svc->listForUserFriendly((int)$user['id']);
 
         echo $this->twig->render('dms/index.twig', [
-            'conversations' => $this->svc->listForUserFriendly((int)$user['id']),
-            'csrf_token'    => \App\Support\Csrf::token($GLOBALS['c'] ?? null),
+            'conversations' => $convs,
+            'csrf_token'    => Csrf::token($GLOBALS['c'] ?? null),
         ]);
     }
 
-    // NEW: POST /dms/start — start a DM by email
+    // NEW: POST /dms/start - start a DM by email
     public function start(array $post): void
     {
         $user = $this->auth->mustBeLoggedIn();
@@ -37,10 +36,8 @@ final class DmController
         $email = (string)($post['email'] ?? '');
         try {
             $convId = $this->svc->startByEmail((int)$user['id'], $email);
-            Flash::success('Conversation started.');
             header('Location: /dms/' . $convId); exit;
         } catch (\Throwable $e) {
-            \App\Support\Flash::error($e->getMessage());
             header('Location: /dms'); exit;
         }
     }
@@ -53,11 +50,9 @@ final class DmController
         $targetId = (int)($query['user_id'] ?? 0);
 
         if ($targetId <= 0) {
-            Flash::error('Choose a valid user to message.');
             header('Location: /dms'); exit;
         }
         if ($targetId === (int)$user['id']) {
-            Flash::error("You can't message yourself.");
             header('Location: /dms'); exit;
         }
 
@@ -66,7 +61,6 @@ final class DmController
             $convId = $this->svc->startOrOpen((int)$user['id'], $targetId);
             header('Location: /dms/' . $convId); exit;
         } catch (\Throwable $e) {
-            Flash::error($e->getMessage());
             header('Location: /dms'); exit;
         }
     }
@@ -107,10 +101,8 @@ final class DmController
         try {
             // matches DmService::send(int $convId, int $senderId, string $body): int
             $msgId = $this->svc->send($convId, (int)$user['id'], $body);
-            Flash::success('Message sent.');
             header('Location: /dms/' . $convId . '#msg-' . (int)$msgId); exit;
         } catch (\Throwable $e) {
-            Flash::error($e->getMessage());
             header('Location: /dms/' . $convId); exit;
         }
     }

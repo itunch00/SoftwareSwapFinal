@@ -5,8 +5,8 @@
 <div class="page-wrap">
 
   {% set f = flash() %}
-  {% for msg in f.success ?? [] %}<div class="alert success">{{ msg }}</div>{% endfor %}
-  {% for msg in f.error ?? [] %}<div class="alert error">{{ msg }}</div>{% endfor %}
+  {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+  {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
 
   <article class="page-card">
     <p class="muted"><a href="/groups/{{ group.slug }}">&larr; Back to {{ group.name }}</a></p>
