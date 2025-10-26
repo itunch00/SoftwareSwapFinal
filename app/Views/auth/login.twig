@@ -3,6 +3,9 @@
 {% block body %}
 <div class="auth-wrap">
   <div class="auth-card">
+    {% set f = flash() %}
+    {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+    {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
     <header class="auth-header">
       <h1>UAFS Campfire</h1>
       <p class="subtitle">Sign in to your account</p>

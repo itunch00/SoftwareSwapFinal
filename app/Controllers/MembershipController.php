@@ -18,6 +18,7 @@ final class MembershipController
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
         $user = $this->auth->mustBeLoggedIn();
+        $this->auth->mustBeAllowedToWrite($user);
 
         if (!$this->svc->join($slug, (int)$user['id'])) {
             http_response_code(404);
@@ -31,6 +32,7 @@ final class MembershipController
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
         $user = $this->auth->mustBeLoggedIn();
+        $this->auth->mustBeAllowedToWrite($user);
 
         if (!$this->svc->leave($slug, (int)$user['id'])) {
             http_response_code(404);

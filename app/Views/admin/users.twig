@@ -1,0 +1,84 @@
+{% extends "layouts/base.twig" %}
+{% block title %}Admin — Users Moderation{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+  <div class="page-card">
+    <div class="breadcrumb">
+      <a href="/home">Home</a> &raquo; <span>Admin — Users</span>
+    </div>
+    <h1>Ban or Unban Users</h1>
+
+    {# Flash messages #}
+    {% set f = flash() %}
+    {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+    {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
+
+    <!-- Ban by email -->
+    <section style="margin: 1rem 0;">
+      <h2 class="muted" style="font-size:1rem;">Ban by email</h2>
+      <form method="post" action="/admin/users/ban-by-email" class="form form-inline">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <div class="form-row">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required placeholder="student@uafs.edu">
+        </div>
+        <div class="form-row">
+          <label for="days">Days</label>
+          <input id="days" name="days" type="number" min="1" value="3" required style="width:90px;">
+        </div>
+        <div class="form-row">
+          <label for="reason">Reason</label>
+          <input id="reason" name="reason" type="text" placeholder="(optional)" style="min-width:240px;">
+        </div>
+        <div class="form-actions">
+          <button class="btn danger" type="submit">Ban user</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Banned users list -->
+    <section style="margin-top:1.25rem;">
+      <h2 class="muted" style="font-size:1rem;">Currently Banned Users</h2>
+
+      {% if banned_users is defined and banned_users|length > 0 %}
+        <div class="table-wrap" style="overflow-x:auto;">
+          <table class="table" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:.5rem; border-bottom:1px solid #e5e7eb;">Name</th>
+                <th style="text-align:left; padding:.5rem; border-bottom:1px solid #e5e7eb;">Email</th>
+                <th style="text-align:left; padding:.5rem; border-bottom:1px solid #e5e7eb;">Banned Until</th>
+                <th style="text-align:left; padding:.5rem; border-bottom:1px solid #e5e7eb;">Reason</th>
+                <th style="text-align:left; padding:.5rem; border-bottom:1px solid #e5e7eb;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in banned_users %}
+                <tr>
+                  <td style="padding:.5rem; border-bottom:1px solid #f3f4f6;">{{ u.display_name ?? u.name ?? ('User #' ~ u.id) }}</td>
+                  <td style="padding:.5rem; border-bottom:1px solid #f3f4f6;">{{ u.email }}</td>
+                  <td style="padding:.5rem; border-bottom:1px solid #f3f4f6;">{{ u.banned_until }}</td>
+                  <td style="padding:.5rem; border-bottom:1px solid #f3f4f6;">{{ u.ban_reason ?? '—' }}</td>
+                  <td style="padding:.5rem; border-bottom:1px solid #f3f4f6;">
+                    <form method="post" action="/admin/users/{{ u.id }}/unban" style="display:inline;">
+                      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                      {# Green unban button #}
+                      <button class="btn success" type="submit" title="Unban"
+                              style="background:#10b981;border-color:#10b981;color:white;">
+                        Unban
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted">No users are currently banned.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -34,6 +34,7 @@ final class ChannelController
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
         $user = $this->auth->mustBeLoggedIn();
+        $this->auth->mustBeAllowedToWrite($user);
 
         try {
             $payload = [

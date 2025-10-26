@@ -10,6 +10,7 @@ use App\Services\ChannelService;
 use App\Services\MessageService;
 use App\Support\Csrf;
 use App\Support\Flash;
+use Twig\Environment;
 
 final class AdminModerationController
 {
@@ -19,41 +20,56 @@ final class AdminModerationController
         private GroupService $groups,
         private ChannelService $channelSvc,
         private MessageService $messageSvc,
+        private Environment $twig
     ) {}
 
-    public function banUser(int $userId, array $post): void
+    // GET /admin/users
+    public function usersPage(): void
+    {
+        $me = $this->auth->mustBeLoggedIn();
+        if (($me['role'] ?? 'student') !== 'admin') {
+            http_response_code(403);
+            echo $this->twig->render('errors/403.twig', ['message' => 'Admin only']); return;
+        }
+
+        $banned = $this->svc->listCurrentlyBanned();
+        echo $this->twig->render('admin/users.twig', [
+            'me'           => $me,
+            'banned_users' => $banned,
+        ]);
+    }
+
+    // POST /admin/users/ban-by-email
+    public function banByEmail(array $post): void
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
-        $user = $this->auth->mustBeLoggedIn();
-        $this->auth->mustBeAdmin($user);
-
-        $days   = (int)($post['days'] ?? 0);
-        $reason = trim((string)($post['reason'] ?? ''));
+        $me = $this->auth->mustBeLoggedIn();
 
         try {
-            if ($days <= 0) throw new \RuntimeException('Ban duration must be > 0 days.');
-            $until = new \DateTimeImmutable('+' . $days . ' days');
-            $this->svc->banUser((int)$user['id'], $userId, $until, $reason ?: null);
-            Flash::success("User banned for {$days} day(s).");
+            $email  = (string)($post['email'] ?? '');
+            $days   = (int)($post['days'] ?? 0);
+            $reason = trim((string)($post['reason'] ?? ''));
+            $target = $this->svc->banUserByEmail($me, $email, $days, $reason);
+            Flash::success('User banned until ' . $target['banned_until'] . '.');
         } catch (\Throwable $e) {
             Flash::error($e->getMessage());
         }
-        header('Location: /users/' . $userId); exit;
+        header('Location: /admin/users'); exit;
     }
 
-    public function unbanUser(int $userId, array $post): void
+    // POST /admin/users/{id}/unban
+    public function unban(int $userId, array $post): void
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
-        $user = $this->auth->mustBeLoggedIn();
-        $this->auth->mustBeAdmin($user);
+        $me = $this->auth->mustBeLoggedIn();
 
         try {
-            $this->svc->unbanUser((int)$user['id'], $userId);
+            $this->svc->unbanUserById($me, $userId);
             Flash::success('User unbanned.');
         } catch (\Throwable $e) {
             Flash::error($e->getMessage());
         }
-        header('Location: /users/' . $userId); exit;
+        header('Location: /admin/users'); exit;
     }
 
     public function deleteGroup(int $groupId, array $post): void

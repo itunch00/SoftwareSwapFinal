@@ -18,25 +18,41 @@ final class ModerationService
         private ModerationActionRepository $audit,
     ) {}
 
-    public function banUser(int $adminId, int $userId, DateTimeInterface $until, ?string $reason = null): void
+    public function banUserByEmail(array $admin, string $email, int $days, ?string $reason): array
     {
-        if ($adminId === $userId) throw new \RuntimeException('Cannot ban yourself.');
-        $user = $this->users->findById($userId);
-        if (!$user) throw new \RuntimeException('User not found.');
-        // policy: forbid banning admins (optional)
-        if (($user['role'] ?? '') === 'admin') throw new \RuntimeException('Cannot ban another admin.');
+        if (($admin['role'] ?? 'student') !== 'admin') {
+            throw new \RuntimeException('Admin only.');
+        }
+        $email = trim($email);
+        if ($email === '') throw new \RuntimeException('Email is required.');
+        if ($days <= 0) throw new \RuntimeException('Ban duration must be > 0 days.');
 
-        $this->users->setBan($userId, $until, $reason);
-        $this->audit->log($adminId, 'ban_user', 'user', $userId, $reason, [
-            'until' => $until->format('Y-m-d H:i:s'),
-        ]);
+        $target = $this->users->findByEmail($email);
+        if (!$target) throw new \RuntimeException('No user found with that email.');
+        if ((int)$target['id'] === (int)$admin['id']) throw new \RuntimeException('You cannot ban yourself.');
+        if (($target['role'] ?? 'student') === 'admin') throw new \RuntimeException('You cannot ban another admin.');
+
+        $until = new \DateTimeImmutable('+' . $days . ' days');
+        $this->users->setBanById((int)$target['id'], $until, $reason ?: null);
+
+        $target['banned_until'] = $until->format('Y-m-d H:i:s');
+        $target['ban_reason']   = $reason ?: null;
+        return $target;
     }
 
-    public function unbanUser(int $adminId, int $userId): void
+    public function unbanUserById(array $admin, int $userId): void
     {
-        $user = $this->users->findById($userId);
-        if (!$user) throw new \RuntimeException('User not found.');
-        $this->users->setBan($userId, null, null);
-        $this->audit->log($adminId, 'unban_user', 'user', $userId, null, []);
+        if (($admin['role'] ?? 'student') !== 'admin') {
+            throw new \RuntimeException('Admin only.');
+        }
+        if ($userId === (int)$admin['id']) throw new \RuntimeException('You cannot unban yourself here.');
+        $victim = $this->users->findById($userId);
+        if (!$victim) throw new \RuntimeException('User not found.');
+        $this->users->clearBanById($userId);
+    }
+
+    public function listCurrentlyBanned(): array
+    {
+        return $this->users->listCurrentlyBanned();
     }
 }

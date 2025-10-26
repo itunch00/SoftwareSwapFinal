@@ -50,7 +50,7 @@ try {
     $messageController = new MessageController($c->messageService, $c->authGuard);
     $profile = new ProfileController($c->profileService, $c->authGuard, $c->twig);
     $dm = new DmController($c->dmService, $c->authGuard, $c->twig);
-    $admin = new AdminModerationController($c->moderationService, $c->authGuard, $c->groupService, $c->channelService, $c->messageService);
+    $admin = new AdminModerationController($c->moderationService, $c->authGuard, $c->groupService, $c->channelService, $c->messageService, $c->twig);
     $twig = $c->twig;
 
     // root -> login
@@ -186,14 +186,19 @@ try {
         $admin->deleteChannel($m[1], $m[2], $_POST); exit;
     }
 
-    // POST /admin/users/{id}/ban
-    if ($method === 'POST' && preg_match('#^/admin/users/(\d+)/ban$#', $uri, $m)) {
-        $admin->banUser((int)$m[1], $_POST); exit;
+    // Admin user moderation UI
+    if ($method === 'GET' && $uri === '/admin/users') {
+        $admin->usersPage(); exit;
     }
 
-    // POST /admin/users/{id}/unban
+    // Ban by email
+    if ($method === 'POST' && $uri === '/admin/users/ban-by-email') {
+        $admin->banByEmail($_POST); exit;
+    }
+
+    // Unban by id
     if ($method === 'POST' && preg_match('#^/admin/users/(\d+)/unban$#', $uri, $m)) {
-        $admin->unbanUser((int)$m[1], $_POST); exit;
+        $admin->unban((int)$m[1], $_POST); exit;
     }
 
     // POST /admin/groups/{id}/delete

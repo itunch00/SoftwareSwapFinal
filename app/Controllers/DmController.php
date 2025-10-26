@@ -93,9 +93,10 @@ final class DmController
     /** POST /dms/{id}/messages — send then redirect back */
     public function send(int $convId, array $post): void
     {
-        $user = $this->auth->mustBeLoggedIn();
-
         Csrf::mustValidate($post['_csrf'] ?? null);
+        $user = $this->auth->mustBeLoggedIn();
+        $this->auth->mustBeAllowedToWrite($user);
+
         $body = (string)($post['body'] ?? '');
 
         try {

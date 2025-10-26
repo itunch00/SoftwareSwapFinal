@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace App\Middleware;
+use App\Support\Flash;
 
 final class AuthGuard
 {
@@ -36,12 +37,24 @@ final class AuthGuard
         }
     }
 
-    public function denyIfBanned(array $user): void
+    private function isBanned(array $user): bool
     {
-        if (!empty($user['banned_until']) && (new \DateTimeImmutable($user['banned_until'])) > new \DateTimeImmutable('now')) {
-            http_response_code(403);
-            throw new \RuntimeException('Your account is banned until ' . $user['banned_until'] .
-                ($user['ban_reason'] ? ' — Reason: ' . $user['ban_reason'] : ''));
+        if (empty($user['banned_until'])) return false;
+        return (new \DateTimeImmutable($user['banned_until'])) > new \DateTimeImmutable('now');
+    }
+
+    /**
+     * Call this right after mustBeLoggedIn() in any POST handler.
+     * Redirects to /home with a flash error if the user is banned.
+     */
+    public function mustBeAllowedToWrite(array $user): void
+    {
+        if ($this->isBanned($user)) {
+            Flash::error(
+                'You are banned until ' . $user['banned_until']
+                . (!empty($user['ban_reason']) ? ' — Reason: ' . $user['ban_reason'] : '')
+            );
+            header('Location: /home'); exit;
         }
     }
 }

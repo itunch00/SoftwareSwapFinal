@@ -9,10 +9,13 @@
   <div class="nav-right">
     {% if app.user %}
       <span class="nav-user">Hello, {{ app.user.name }} ({{ app.user.role|title }})</span>
-      <a class="nav-link {{ is_active('/dms') ? 'active' : '' }}" href="/dms" title="Messages">💬 Messages</a>
+      {% if app.user and app.user.role == 'admin' %}
+        <a class="nav-link {{ is_active('/dms') ? 'active' : '' }}" href="/admin/users" class="{{ is_active('/admin/users') ? 'active' : '' }}">Ban</a>
+      {% endif %}
+      <a class="nav-link {{ is_active('/dms') ? 'active' : '' }}" href="/dms" title="Messages">Messages</a>
       <!-- Profile Link -->
       <a class="nav-link {{ is_active('/me') ? 'active' : '' }}" href="/profile" title="My Profile">
-        👤 Profile
+        Profile
       </a>
       <!-- Logout -->
       <form method="post" action="/logout" class="nav-logout-form" style="display:inline;">

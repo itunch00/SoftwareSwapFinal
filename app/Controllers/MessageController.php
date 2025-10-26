@@ -27,6 +27,7 @@ final class MessageController
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
         $user = $this->auth->mustBeLoggedIn();
+        $this->auth->mustBeAllowedToWrite($user);
 
         try {
             $res = $this->svc->createMessage($groupSlug, $channelSlug, (string)($post['body'] ?? ''), $user);
