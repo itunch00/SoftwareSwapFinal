@@ -43,7 +43,7 @@
               {% if c.last_body %}
                 <div class="muted small" title="{{ c.last_at }}">
                   <em>{{ c.last_body|slice(0,80) ~ (c.last_body|length > 80 ? '…' : '') }}</em>
-                  <span> · {{ c.last_at|date('Y-m-d H:i') }}</span>
+                  <span class="muted small"> . {{ c.last_at|date('M j, Y · h:i a') }}</span>
                 </div>
               {% else %}
                 <div class="muted small">No messages yet.</div>

@@ -101,36 +101,6 @@
     </section>
   {% endif %}
 
-  {# ================= Create Group =================
-  <section class="page-card" id="new-group">
-    <h2>Create a Group</h2>
-    <form method="POST" action="/groups" class="form">
-      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-
-      <div class="form-row">
-        <label for="g-name">Name</label>
-        <input id="g-name" name="name" required placeholder="e.g., CS Seniors 2025">
-      </div>
-
-      <div class="form-row">
-        <label for="g-desc">Description <span class="muted">(optional)</span></label>
-        <input id="g-desc" name="description" placeholder="Short description">
-      </div>
-
-      <div class="form-row">
-        <label for="g-vis">Visibility</label>
-        <select id="g-vis" name="visibility">
-          <option value="public">public</option>
-          <option value="private">private</option>
-        </select>
-      </div>
-
-      <div class="form-actions">
-        <button class="btn primary" type="submit">Create Group</button>
-      </div>
-    </form>
-  </section> #}
-
   {# ================= Create Group ================= #}
   <section class="page-card" id="new-group">
     <h2>Create a Group</h2>

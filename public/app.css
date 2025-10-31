@@ -400,41 +400,10 @@ body.nav-open{overflow:hidden}
   }
 }
 
-.auth-form .btn { display:block; margin:1rem auto 0; min-width:160px; }
-
-/* Narrow, centered form like login/signup */
-.auth-form.narrow { 
-  max-width: 640px;      /* good on laptops */
-  margin: 0 auto; 
-}
-
-/* Optional inner slab so it doesn't look edge-to-edge inside page-card */
-.form-panel {
-  max-width: 760px;      /* section container a bit wider than the form */
-  margin: .5rem auto 0;
-  background: #f8fafc;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 16px 20px;
-}
-
-/* Keep the Readonly checkbox label inline with the box */
-.field > label.checkbox {
-  display: inline-flex;
+.field-inline {
+  display: flex;
   align-items: center;
-  gap: .5rem;
-  font-weight: 600;
-}
-.field > label.checkbox input { margin: 0; }
-
-/* Center the submit button like other auth forms */
-.auth-form .btn.primary { 
-  display: block; 
-  margin: 12px auto 0; 
+  justify-content: space-between; /* pushes text left, checkbox right */
 }
 
-/* Mobile: let containers fill width naturally */
-@media (max-width: 640px){
-  .form-panel { max-width: 100%; padding: 12px; }
-  .auth-form.narrow { max-width: 100%; }
-}
+.auth-form .btn { display:block; margin:1rem auto 0; min-width:160px; }

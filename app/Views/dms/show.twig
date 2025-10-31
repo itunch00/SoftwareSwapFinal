@@ -21,7 +21,7 @@
             <li id="msg-{{ m.id }}" class="message {{ mine ? 'mine' : 'theirs' }}">
               <div class="message-head">
                 <strong>{{ mine ? 'You' : (partner.name ?? partner.display_name ?? ('User #' ~ m.sender_id)) }}</strong>
-                <span class="muted small">{{ m.created_at|date('Y-m-d H:i') }}</span>
+                <span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
               </div>
               <div class="message-body">{{ m.body|e }}</div>
             </li>
