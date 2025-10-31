@@ -1,24 +1,17 @@
+{# app/Views/channels/show.twig #}
 {% extends "layouts/base.twig" %}
 {% block title %}#{{ channel.name }} — {{ group.name }} — UAFS Social{% endblock %}
 {% set me = app.user %}
 
 {% block body %}
-<div class="page-wrap">
-
-  {% set f = flash() %}
-  {% for msg in f.success ?? [] %}
-    <div class="alert alert-success">{{ msg }}</div>
-  {% endfor %}
-  {% for msg in f.error ?? [] %}
-    <div class="alert alert-error">{{ msg }}</div>
-  {% endfor %}
+<div class="page-wrap chat-page"> {# chat-page scopes the lock-down rules #}
 
   <section class="chat-wrapper">
     <!-- Channel Header -->
     <header class="chat-header">
       <div class="chat-title">
         <a href="/groups/{{ group.slug }}" class="back-link">&larr; {{ group.name }}</a>
-        <h1>#{{ channel.name }}</h1>
+        <h1 class="mb-0">#{{ channel.name }}</h1>
       </div>
 
       <div class="channel-tags">
@@ -39,21 +32,19 @@
       {% endif %}
     </header>
 
-    <!-- About -->
-    {% if channel.description %}
-      <div class="channel-about">
-        <p class="muted">{{ channel.description }}</p>
-      </div>
-    {% endif %}
+    {# Flash messages live INSIDE the white box, so they don't push the page #}
+    {% set f = flash() %}
+    {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+    {% for msg in f.error ?? [] %}  <div class="alert alert-error">{{ msg }}</div>{% endfor %}
 
-    <!-- Messages -->
+    <!-- Messages (only this scrolls) -->
     <div class="chat-body">
       {% if messages and messages|length > 0 %}
         {% for m in messages %}
           <div class="message-card">
             <div class="message-head">
               <strong>{{ m.user_name }}</strong>
-              <span class="muted small">{{ m.created_at|date('Y-m-d H:i') }}</span>
+              <span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
               {% if app.user and app.user.role == 'admin' %}
                 <form method="post"
                       action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages/{{ m.id }}/delete"
@@ -71,20 +62,20 @@
       {% endif %}
     </div>
 
-    <!-- Composer -->
-    {% if can_post %}
-      <form method="POST"
-            action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages"
-            class="composer">
-        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-        <textarea name="body" rows="2" required placeholder="Write a message..." class="input"></textarea>
-        <button class="btn primary" type="submit">Send</button>
-      </form>
-    {% else %}
-      <p class="hint small muted" style="text-align:center;margin-top:1rem;">
-        You can’t post in this channel.
-      </p>
-    {% endif %}
+    <!-- Sticky composer -->
+    <div class="chat-footer">
+      {% if can_post %}
+        <form method="POST"
+              action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages"
+              class="composer">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <textarea name="body" rows="2" required placeholder="Write a message..." class="input"></textarea>
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+      {% else %}
+        <p class="hint small muted text-center mt-2">You can’t post in this channel.</p>
+      {% endif %}
+    </div>
   </section>
 </div>
 {% endblock %}

@@ -1,32 +1,72 @@
-<nav class="topnav">
-  <div class="nav-left">
-    <a class="brand" href="/home">
+{# app/Views/partials/nav.twig #}
+{% set me = app.user is defined ? app.user : (user is defined ? user : null) %}
+
+<nav class="topnav" role="navigation" aria-label="Primary">
+  <a class="brand" href="/home">
       <img src="/assets/uafsLion.png" alt="UAFS Logo" style="height:36px;width:auto;border-radius:6px;">
     </a>
+
+  {# Desktop links #}
+  <div class="nav-links">
     <a class="nav-link {{ is_active('/home') ? 'active' : '' }}" href="/home">Home</a>
-    <a class="nav-link {{ current_path == '/home#explore' ? 'active' : '' }}" href="/home#explore">Explore</a>
-    <a class="nav-link" href="/home#new-group">New Group</a>
+    <a class="nav-link {{ is_active('/dms') ? 'active' : '' }}" href="/dms">DMs</a>
+    {% if me and me.role is defined and me.role in ['admin'] %}
+      <a class="nav-link {{ is_active('/admin/users') ? 'active' : '' }}" href="/admin/users">Admin</a>
+    {% endif %}
+    <a class="nav-link {{ is_active('/me') ? 'active' : '' }}" href="/profile">Profile</a>
+    <form method="post" action="/logout" class="d-inline-block m-0 p-0">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <button class="nav-link" type="submit" style="background:none;">Logout</button>
+    </form>
   </div>
 
-  <div class="nav-right">
-    {% if app.user %}
-      <span class="nav-user">Hello, {{ app.user.name }} ({{ app.user.role|title }})</span>
-      {% if app.user and app.user.role == 'admin' %}
-        <a class="nav-link {{ is_active('/dms') ? 'active' : '' }}" href="/admin/users" class="{{ is_active('/admin/users') ? 'active' : '' }}">Ban</a>
-      {% endif %}
-      <a class="nav-link {{ is_active('/dms') ? 'active' : '' }}" href="/dms" title="Messages">Messages</a>
-      <!-- Profile Link -->
-      <a class="nav-link {{ is_active('/me') ? 'active' : '' }}" href="/profile" title="My Profile">
-        Profile
-      </a>
-      <!-- Logout -->
-      <form method="post" action="/logout" class="nav-logout-form" style="display:inline;">
-        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-        <button class="linklike" type="submit">Logout</button>
-      </form>
-    {% else %}
-      <a class="nav-link" href="/login">Login</a>
-      <a class="nav-link" href="/signup">Sign up</a>
-    {% endif %}
-  </div>
+  {# Mobile hamburger #}
+  <button class="hamburger" type="button" aria-label="Open menu" aria-controls="mobileMenu" aria-expanded="false">
+    <span class="hamburger-box"><span class="hamburger-inner"></span></span>
+  </button>
 </nav>
+
+{# Mobile drawer (hidden by default) #}
+<div id="mobileMenu" class="mobile-drawer" hidden>
+  <div class="mobile-head">
+    <strong>Menu</strong>
+    <button type="button" data-close aria-label="Close">✕</button>
+  </div>
+  <a class="mobile-link" href="/home">Home</a>
+  <a class="mobile-link" href="/dms">DMs</a>
+  {% if me and me.role is defined and me.role in ['admin'] %}
+    <a class="mobile-link" href="/admin/users">Admin</a>
+  {% endif %}
+  <a class="mobile-link" href="/profile">Profile</a>
+  <div class="divider"></div>
+  <form method="post" action="/logout">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button type="submit" class="mobile-link">Logout</button>
+  </form>
+</div>
+
+{# Tiny, framework-free toggler #}
+<script>
+(function(){
+  const btn = document.querySelector('.topnav .hamburger');
+  const drawer = document.getElementById('mobileMenu');
+
+  if(!btn || !drawer) return;
+
+  function openDrawer(){
+    drawer.hidden = false;
+    btn.setAttribute('aria-expanded','true');
+    document.body.classList.add('nav-open');
+  }
+  function closeDrawer(){
+    drawer.hidden = true;
+    btn.setAttribute('aria-expanded','false');
+    document.body.classList.remove('nav-open');
+  }
+  btn.addEventListener('click', () => drawer.hidden ? openDrawer() : closeDrawer());
+  drawer.addEventListener('click', (e) => {
+    if(e.target.matches('[data-close], a.mobile-link, form button')) closeDrawer();
+  });
+  window.addEventListener('resize', () => { if (window.innerWidth >= 768) closeDrawer(); });
+})();
+</script>

@@ -1,28 +1,36 @@
 {% extends "layouts/base.twig" %}
-{% block title %}My Profile - UAFS Social{% endblock %}
+{% block title %}My Profile — UAFS Social{% endblock %}
 
 {% block body %}
 {% set me = app.user %}
-<div class="page-wrap">
 
-  {% set f = flash() %}
-  {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
-  {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
+<div class="auth-wrap">
+  <div class="auth-card">
 
-  <div class="page-card">
-    <div class="breadcrumb">
+    {# flash inside the card #}
+    {% set f = flash() %}
+    {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+    {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
+
+    <div class="breadcrumb small" style="margin-bottom:.25rem;">
       <a href="/home">Home</a> &raquo; <span>My Profile</span>
     </div>
 
-    <h1>My Profile</h1>
-    <p class="muted">Manage how your profile appears to others.</p>
+    <header class="auth-header">
+      <h1>My Profile</h1>
+      <p class="subtitle">Manage how your profile appears to others.</p>
+    </header>
 
-    <form method="post" action="/profile" class="form" style="margin-top:1rem">
+    {% if error %}
+      <div class="alert" role="alert" aria-live="polite">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/profile" class="auth-form" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
 
       <div class="field">
         <label for="display_name">Display name</label>
-        <input id="display_name" name="display_name" value="{{ user.display_name }}">
+        <input id="display_name" name="display_name" type="text" value="{{ user.display_name }}" required />
       </div>
 
       <div class="field">
@@ -33,62 +41,62 @@
 
       <div class="field">
         <label for="website">Website</label>
-        <input id="website" name="website" placeholder="https://example.com" value="{{ profile.website ?? '' }}">
+        <input id="website" name="website" type="url" placeholder="https://example.com" value="{{ profile.website ?? '' }}" />
       </div>
 
       <div class="field">
         <label for="github">GitHub</label>
-        <input id="github" name="github" placeholder="https://github.com/username" value="{{ profile.github ?? '' }}">
+        <input id="github" name="github" type="url" placeholder="https://github.com/username" value="{{ profile.github ?? '' }}" />
       </div>
 
       <div class="field">
         <label for="linkedin">LinkedIn</label>
-        <input id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/username" value="{{ profile.linkedin ?? '' }}">
+        <input id="linkedin" name="linkedin" type="url" placeholder="https://www.linkedin.com/in/username" value="{{ profile.linkedin ?? '' }}" />
       </div>
 
       <div class="field">
         <label for="pronouns">Pronouns</label>
-        <input id="pronouns" name="pronouns" placeholder="e.g., she/her, he/him, they/them" value="{{ profile.pronouns ?? '' }}">
+        <input id="pronouns" name="pronouns" type="text" placeholder="e.g., she/her, he/him, they/them" value="{{ profile.pronouns ?? '' }}" />
       </div>
 
       <div class="field">
         <label for="timezone">Timezone</label>
-        <input id="timezone" name="timezone" placeholder="e.g., America/Chicago" value="{{ profile.timezone ?? '' }}">
+        <input id="timezone" name="timezone" type="text" placeholder="e.g., America/Chicago" value="{{ profile.timezone ?? '' }}" />
       </div>
 
-      <div class="form-actions" style="margin-top:16px;">
-        <button class="btn primary" type="submit">Save changes</button>
-      </div>
+      <button class="btn primary" type="submit">Save changes</button>
     </form>
 
-    {# ---------- Admin Moderation (only when viewing another user's profile) ---------- #}
+    {# ---------- Admin moderation (only when editing someone else) ---------- #}
     {% if me and me.role == 'admin' and user and user.id != me.id %}
       <hr style="margin:1.25rem 0;">
 
-      <h2 class="muted" style="font-size:1.1rem;">Admin moderation</h2>
+      <h2 class="muted" style="font-size:1.05rem;margin:.25rem 0 0.75rem;">Admin moderation</h2>
 
-      {# Current ban status #}
       {% if user.banned_until and user.banned_until > "now"|date('Y-m-d H:i:s') %}
-        <p class="alert alert-error" style="margin:.5rem 0 1rem;">
-          <strong>Currently banned</strong> until {{ user.banned_until }}.
-          {% if user.ban_reason %} Reason: {{ user.ban_reason }}{% endif %}
+        <p class="alert alert-error" style="margin:.25rem 0 1rem;">
+          <strong>Currently banned</strong> until {{ user.banned_until }}{% if user.ban_reason %}. Reason: {{ user.ban_reason }}{% endif %}.
         </p>
-        <form method="post" action="/admin/users/{{ user.id }}/unban" style="display:inline-block">
+        <form method="post" action="/admin/users/{{ user.id }}/unban" class="auth-form" style="gap:.5rem;">
           <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
           <button class="btn secondary" type="submit">Unban user</button>
         </form>
       {% else %}
-        <form method="post" action="/admin/users/{{ user.id }}/ban" class="form-inline" style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;">
+        <form method="post" action="/admin/users/{{ user.id }}/ban" class="auth-form" style="gap:.5rem;">
           <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-          <label class="muted small" for="ban_days" style="margin-right:.25rem;">Ban for</label>
-          <input id="ban_days" name="days" type="number" min="1" value="3" style="width:90px;" required>
-          <span class="muted small">day(s)</span>
-          <input name="reason" type="text" placeholder="Reason (optional)" style="min-width:220px;">
+          <div class="field">
+            <label for="ban_days">Ban duration (days)</label>
+            <input id="ban_days" name="days" type="number" min="1" value="3" required />
+          </div>
+          <div class="field">
+            <label for="ban_reason">Reason (optional)</label>
+            <input id="ban_reason" name="reason" type="text" placeholder="Reason (optional)" />
+          </div>
           <button class="btn danger" type="submit">Ban user</button>
         </form>
       {% endif %}
     {% endif %}
-    {# ---------- /Admin Moderation ---------- #}
+    {# ---------- /Admin moderation ---------- #}
 
   </div>
 </div>

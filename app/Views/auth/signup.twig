@@ -1,37 +1,55 @@
 {% extends "layouts/base.twig" %}
 {% block title %}Sign up — UAFS Campfire{% endblock %}
+
 {% block body %}
 <div class="auth-wrap">
   <div class="auth-card">
     {% set f = flash() %}
     {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
     {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
+
     <header class="auth-header">
       <h1>UAFS Campfire</h1>
       <p class="subtitle">Create your account</p>
     </header>
 
     {% if error %}
-      <div class="alert" role="alert" aria-live="polite">{{ error }}</div>
+      <div class="alert alert-error" role="alert" aria-live="polite">{{ error }}</div>
     {% endif %}
 
-    <form method="post" action="/signup" novalidate>
+    <form method="post" action="/signup" class="auth-form" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
 
       <div class="field">
         <label for="display_name">Display name</label>
-        <input id="display_name" name="display_name" type="text" required autocomplete="name" />
+        <input id="display_name"
+               name="display_name"
+               type="text"
+               required
+               autocomplete="name"
+               placeholder="Your name" />
       </div>
 
       <div class="field">
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" required autocomplete="email" />
+        <input id="email"
+               name="email"
+               type="email"
+               required
+               autocomplete="email"
+               placeholder="you@example.edu" />
       </div>
 
       <div class="field">
         <label for="password">Password</label>
-        <input id="password" name="password" type="password" minlength="6" required autocomplete="new-password" />
-        <div class="hint small">At least 6 characters.</div>
+        <input id="password"
+               name="password"
+               type="password"
+               minlength="6"
+               required
+               autocomplete="new-password"
+               placeholder="Create a password" />
+        <div class="hint small">At least 6 characters</div>
       </div>
 
       <div class="field">
