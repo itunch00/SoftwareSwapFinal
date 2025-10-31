@@ -407,3 +407,72 @@ body.nav-open{overflow:hidden}
 }
 
 .auth-form .btn { display:block; margin:1rem auto 0; min-width:160px; }
+
+/* === Button Variants === */
+.btn.primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: 1px solid var(--color-primary);
+}
+
+.btn.primary:hover {
+  background-color: #2359cc;
+}
+
+.btn.secondary {
+  background-color: var(--color-brand-accent);
+  color: #fff;
+  border: 1px solid var(--color-brand-accent);
+}
+
+.btn.secondary:hover {
+  background-color: #128ca3;
+}
+
+.btn.success {
+  background-color: var(--color-success);
+  color: #fff;
+  border: 1px solid var(--color-success);
+}
+
+.btn.success:hover {
+  background-color: #157347;
+}
+
+.btn.warning {
+  background-color: var(--color-warning);
+  color: #fff;
+  border: 1px solid var(--color-warning);
+}
+
+.btn.warning:hover {
+  background-color: #d97706;
+}
+
+.btn.danger {
+  background-color: var(--color-brand-deep);
+  color: #fff;
+  border: 1px solid var(--color-danger);
+}
+
+.btn.danger:hover {
+  background-color: #b91c1c;
+}
+
+/* Ghost variant (useful for cancel buttons) */
+.btn.ghost {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.btn.ghost:hover {
+  background: #f9fafb;
+}
+
+/* Small size */
+.btn.small {
+  padding: 0.4rem 0.7rem;
+  font-size: var(--fs-sm);
+  border-radius: var(--radius-sm);
+}
