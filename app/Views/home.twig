@@ -25,26 +25,72 @@
 
   {% if admin_groups is defined %}
     {# ================= Admin: All Groups ================= #}
-    <section class="page-card" id="explore">
-      <h2>All Groups</h2>
-      {% if admin_groups and admin_groups|length > 0 %}
-        <div class="group-grid">
-          {% for g in admin_groups %}
-            <div class="group-card">
-              <div class="group-header">
-                <a href="/groups/{{ g.slug }}" class="group-name">{{ g.name }}</a>
-                <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
-              </div>
-              {% if g.description %}
-                <p class="group-desc">{{ g.description }}</p>
+    <article class="page-card">
+      <header style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <h2 style="margin:0">All Groups ({{ admin_groups.total }})</h2>
+
+        <form method="get" action="/home" class="group-filters">
+          <select name="sort">
+            <option value="newest" {{ admin_groups.sort=='newest'?'selected':'' }}>Newest</option>
+            <option value="name"   {{ admin_groups.sort=='name'  ?'selected':'' }}>Name</option>
+          </select>
+          <select name="per">
+            {% for n in [12,24,36,48] %}
+              <option value="{{ n }}" {{ admin_groups.per==n?'selected':'' }}>{{ n }}/page</option>
+            {% endfor %}
+          </select>
+          <button type="submit">Apply</button>
+        </form>
+      </header>
+
+      {# grid of groups #}
+      <div class="group-grid">
+        {% for g in admin_groups.items %}
+          <div class="group-card">
+            <div class="group-header">
+              <a class="group-name" href="/groups/{{ g.slug }}">{{ g.name }}</a>
+              {% if g.visibility == 'public' %}
+                <span class="badge public">PUBLIC</span>
+              {% else %}
+                <span class="badge private">PRIVATE</span>
               {% endif %}
             </div>
+            {% if g.description %}
+              <p class="group-desc">{{ g.description }}</p>
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="muted">No groups found.</p>
+        {% endfor %}
+      </div>
+
+      {# pagination controls #}
+      {% if admin_groups.pages > 1 %}
+        <nav aria-label="Groups pagination" style="display:flex;gap:.5rem;align-items:center;justify-content:center;margin-top:1rem;flex-wrap:wrap">
+          {% set qparams = {
+            'q': admin_groups.q,
+            'sort': admin_groups.sort,
+            'per': admin_groups.per
+          } %}
+          {% set prev = admin_groups.page - 1 %}
+          {% set next = admin_groups.page + 1 %}
+
+          <a class="btn small ghost" href="/home?{{ qparams|merge({'page':1})|url_encode }}"  {{ admin_groups.page==1 ? 'aria-disabled=\"true\"' : '' }}>« First</a>
+          <a class="btn small ghost" href="/home?{{ qparams|merge({'page':prev})|url_encode }}" {{ admin_groups.page==1 ? 'aria-disabled=\"true\"' : '' }}>‹ Prev</a>
+
+          {% set start = max([1, admin_groups.page - 2]) %}
+          {% set end   = min([admin_groups.pages, admin_groups.page + 2]) %}
+          {% for p in start..end %}
+            {% set link = "/home?" ~ (qparams|merge({'page':p})|url_encode) %}
+            <a class="btn small {{ p==admin_groups.page ? 'primary':'ghost' }}" href="{{ link }}">{{ p }}</a>
           {% endfor %}
-        </div>
-      {% else %}
-        <p class="muted">No groups found.</p>
+
+          <a class="btn small ghost" href="/home?{{ qparams|merge({'page':next})|url_encode }}" {{ admin_groups.page==admin_groups.pages ? 'aria-disabled=\"true\"' : '' }}>Next ›</a>
+          <a class="btn small ghost" href="/home?{{ qparams|merge({'page':admin_groups.pages})|url_encode }}">Last »</a>
+        </nav>
       {% endif %}
-    </section>
+    </article>
+
 
   {% else %}
     {# ================= Member: Your Groups ================= #}

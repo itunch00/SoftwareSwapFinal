@@ -615,3 +615,88 @@ body.nav-open{overflow:hidden}
 
 .nav-links .bi { font-size: 1.3rem; vertical-align: middle; }
 .nav-links a.nav-link { padding: .25rem .6rem; }
+
+/* Scope to this card only */
+  .admin-groups-card .group-card{padding:14px 16px;border-radius:14px}
+  .admin-groups-card .group-header{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+  .admin-groups-card .group-name{font-weight:700;color:#1e3a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .admin-groups-card .group-desc{margin:.4rem 0 0}
+
+  /* Filter controls */
+  .admin-groups-form{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:.5rem;
+    align-items:center;
+  }
+  .admin-groups-form input,
+  .admin-groups-form select{
+    height:38px;
+    padding:.45rem .6rem;
+    border-radius:.55rem;
+    border:1px solid var(--color-border);
+    background:#fff;
+  }
+  .admin-groups-form .btn{height:38px}
+
+  /* Pagination */
+  .groups-pager{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-top:12px}
+  .groups-pager .btn{padding:.4rem .6rem;border-radius:.5rem;min-width:36px}
+
+  /* Mobile tweaks */
+  @media (max-width: 900px){
+    .admin-groups-form{ grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px){
+    .admin-groups-card .page-card{padding:16px}
+    .admin-groups-header{gap:.5rem}
+    .admin-groups-form{ grid-template-columns: 1fr; }
+    .admin-groups-form .btn{ width:100%; }
+    .group-grid{ display:grid; grid-template-columns:1fr; gap:.6rem; }
+    .admin-groups-card .group-card{ padding:12px 14px; }
+    .groups-pager .btn{ padding:.36rem .5rem; }
+  }
+
+    .group-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .group-filters select,
+  .group-filters button {
+    height: 38px;
+    padding: 0 .75rem;
+    border-radius: .5rem;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
+
+  .group-filters select {
+    appearance: none;
+    background-color: #fff;
+  }
+
+  .group-filters button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  .group-filters button:hover {
+    background-color: #1d4ed8;
+  }
+
+  @media (max-width: 640px) {
+    .group-filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .group-filters select,
+    .group-filters button {
+      width: 100%;
+    }
+  }

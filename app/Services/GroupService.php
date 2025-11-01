@@ -150,4 +150,30 @@ final class GroupService
     {
         $this->groups->deleteById($groupId);
     }
+
+    public function listAllForAdminPaged(int $page, int $per, string $sort = 'newest', ?string $q = null): array
+    {
+        $offset = ($page - 1) * $per;
+
+        // Normalize sort to whitelist
+        $sort = in_array($sort, ['newest', 'name'], true) ? $sort : 'newest';
+
+        // Delegate to repo
+        $total = $this->groups->countAll($q);                                  // NEW
+        $items = $this->groups->findAllPaged($offset, $per, $sort, $q);        // NEW
+
+        // Optional: compute total pages (for UI)
+        $pages = (int)max(1, ceil($total / $per));
+
+        return [
+            'items' => $items,
+            'total' => (int)$total,
+            'page'  => (int)$page,
+            'per'   => (int)$per,
+            'pages' => $pages,
+            'sort'  => $sort,
+            'q'     => $q,
+        ];
+    }
+
 }

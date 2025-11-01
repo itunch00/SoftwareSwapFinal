@@ -112,4 +112,50 @@ final class GroupRepository
         $st->bindValue(':id', $id, PDO::PARAM_INT);
         $st->execute();
     }
+
+    public function countAll(?string $q = null): int
+    {
+        if ($q !== null && $q !== '') {
+            $sql = "SELECT COUNT(*) FROM groups
+                    WHERE name LIKE :q OR description LIKE :q";
+            $stmt = $this->db->prepare($sql);
+            $qq = "%{$q}%";
+            $stmt->bindParam(':q', $qq, \PDO::PARAM_STR);
+        } else {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM groups");
+        }
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function findAllPaged(int $offset, int $limit, string $sort = 'newest', ?string $q = null): array
+    {
+        // Whitelisted ORDER BY
+        $orderBy = $sort === 'name' ? 'name ASC' : 'created_at DESC';
+
+        if ($q !== null && $q !== '') {
+            $sql = "SELECT id, slug, name, description, visibility, created_at
+                    FROM groups
+                    WHERE name LIKE :q OR description LIKE :q
+                    ORDER BY {$orderBy}
+                    LIMIT :lim OFFSET :off";
+            $stmt = $this->db->prepare($sql);
+            $qq = "%{$q}%";
+            $stmt->bindParam(':q', $qq, \PDO::PARAM_STR);
+        } else {
+            $sql = "SELECT id, slug, name, description, visibility, created_at
+                    FROM groups
+                    ORDER BY {$orderBy}
+                    LIMIT :lim OFFSET :off";
+            $stmt = $this->db->prepare($sql);
+        }
+
+        // LIMIT/OFFSET must be bound as integers
+        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, \PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
 }

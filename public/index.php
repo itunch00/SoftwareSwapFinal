@@ -94,11 +94,24 @@ try {
 
         // NEW: for admins, send a single merged list
         if (($user['role'] ?? 'student') === 'admin') {
-            $all = $c->groupService->listAllForAdmin();
+            // ---- pagination inputs (GET) ----
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $per  = isset($_GET['per'])  ? (int)$_GET['per'] : 24;
+            // hard caps to protect DB
+            if ($per < 6)  $per = 6;
+            if ($per > 48) $per = 48;
+
+            // optional admin search/sort (safe defaults)
+            $q    = isset($_GET['q']) ? trim((string)$_GET['q']) : null;
+            $sort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'newest'; // newest|name
+
+            $result = $c->groupService->listAllForAdminPaged($page, $per, $sort, $q);
+            // $result = ['items'=>[], 'total'=>0, 'page'=>1, 'per'=>24, 'sort'=>'newest', 'q'=>null]
+
             echo $c->twig->render('home.twig', [
                 'user'        => $user,
                 'csrf_token'  => \App\Support\Csrf::token($c),
-                'admin_groups'=> $all,           // <-- single list for admins
+                'admin_groups'=> $result,   // NOTE: now an array with items+meta
             ]);
             exit;
         }
@@ -143,13 +156,6 @@ try {
     if ($method === 'GET' && preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)$#', $uri, $m)) {
         redirect("/groups/{$m[1]}?c={$m[2]}");
     }
-
-    // SHOW channel
-    // if ($method === 'GET' && preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)$#', $uri, $m)) {
-    //     $viewer = $c->authGuard->userOrNull();
-    //     $channelController->show($m[1], $m[2], $viewer);
-    //     exit;
-    // }
 
     // POST /groups/{group}/channels/{channel}/messages
     if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/messages$#', $uri, $m)) {
