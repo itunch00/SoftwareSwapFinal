@@ -45,6 +45,7 @@ final class Container
     public ProfileService $profileService;
     public DmService $dmService;
     public ModerationService $moderationService;
+    public ChannelRepository $channelRepository;
 
     public function __construct()
     {
@@ -132,5 +133,6 @@ final class Container
         $this->profileService    = new ProfileService($userRepo, $profileRepo);
         $this->dmService = new DmService($dmConvRepo, $dmMsgRepo, $userRepo);
         $this->moderationService = new ModerationService($userRepo, $channelRepo, $messageRepo, $moderationActionRepo);
+        $this->channelRepository = $channelRepo;
     }
 }

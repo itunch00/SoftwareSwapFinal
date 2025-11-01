@@ -1,146 +1,190 @@
+{# app/Views/groups/show.twig #}
 {% extends "layouts/base.twig" %}
 {% block title %}{{ group.name }} — UAFS Campfire{% endblock %}
-{% block body %}
-<div class="page-wrap">
+{% set me = app.user %}
+{# Controller should set:
+   - channels: list of channels in group
+   - selected_channel: channel object for ?c=slug (or null)
+   - messages: messages for selected_channel (or [])
+   - can_view, is_member, can_post
+#}
 
-  {# Flash messages #}
+{% block body %}
+<div class="page-wrap group-hub">
+
+  {# Flash messages (global) #}
   {% set f = flash() %}
   {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
   {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
 
-  <!-- Group Header -->
-  <article class="page-card">
-    <div class="breadcrumb">
-      <a href="/home">Home</a> &raquo; <span>{{ group.name }}</span>
-    </div>
+  <div class="hub-grid">
 
-    <header class="group-header">
-      <div>
-        <h1>{{ group.name }}</h1>
-        {% if group.description %}<p class="muted">{{ group.description }}</p>{% endif %}
-      </div>
-      <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
+    {# LEFT: Group info + channels list #}
+    <aside class="hub-left">
+      <div class="left-card">
+        <div class="breadcrumb small muted">
+          <a href="/home">Home</a> &raquo; <span>{{ group.name }}</span>
+        </div>
 
-      {% if viewer and viewer.role == 'admin' %}
-        <form method="post" action="/admin/groups/{{ group.id }}/delete" style="display:inline; margin-left:.5rem;">
-          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-          <button class="btn danger" type="submit">Delete Group</button>
-        </form>
-      {% endif %}
-    </header>
+        <header class="left-header">
+          <h2 class="hub-title">{{ group.name }}</h2>
+          <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
+        </header>
+        {% if group.description %}<p class="muted small">{{ group.description }}</p>{% endif %}
 
-    {# Join/Leave — skip entirely for admin #}
-    {% if viewer and viewer.role != 'admin' %}
-      <div class="group-actions">
-        {% if is_member %}
-          <form method="post" action="/groups/{{ group.slug }}/leave">
-            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-            <button class="btn secondary" type="submit">Leave group</button>
-          </form>
-        {% else %}
-          <form method="post" action="/groups/{{ group.slug }}/join">
-            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-            <button class="btn primary" type="submit">Join group</button>
-          </form>
-        {% endif %}
-      </div>
-    {% elseif not viewer %}
-      <p class="hint small">Sign in to join this group.</p>
-    {% endif %}
-  </article>
-
-  <!-- 💬 Channels List (card 1) -->
-  <section class="page-card">
-    <h2>Channels</h2>
-
-    {% if can_view %}
-      {% if channels %}
-        <ul class="channel-list">
-          {% for channel in channels %}
-            <li class="channel-item">
-              <a class="channel-link" href="/groups/{{ group.slug }}/channels/{{ channel.slug }}">
-                <span class="channel-name">{{ channel.name }}</span>
-              </a>
-
-              {% if channel.kind != 'general' %}
-                <span class="badge subtle">{{ channel.kind|title }}</span>
-              {% endif %}
-              {% if channel.is_readonly %}
-                <span class="badge subtle">Readonly</span>
-              {% endif %}
-
-              {% if viewer and viewer.role == 'admin' %}
-                <form method="post"
-                      action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/delete"
-                      style="display:inline;margin-left:.5rem">
-                  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                  <button class="btn danger small" type="submit" title="Delete channel">🗑️</button>
-                </form>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="muted">No channels have been created yet.</p>
-      {% endif %}
-    {% else %}
-      {% if viewer and viewer.role == 'admin' %}
-        <p class="muted small">Admin view (you are not a member of this private group).</p>
-      {% else %}
-        <p>This group is {{ group.visibility }}. Join the group to see its channels.</p>
-        {% if viewer and viewer.role != 'admin' %}
-          <div class="group-actions">
+        {% if me and me.role != 'admin' %}
+          <div class="stack" style="margin-top:.5rem">
             {% if is_member %}
               <form method="post" action="/groups/{{ group.slug }}/leave">
-                <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-                <button class="btn secondary" type="submit">Leave group</button>
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="btn secondary small" type="submit">Leave group</button>
               </form>
             {% else %}
               <form method="post" action="/groups/{{ group.slug }}/join">
-                <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-                <button class="btn primary" type="submit">Join group</button>
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="btn primary small" type="submit">Join group</button>
               </form>
             {% endif %}
           </div>
         {% endif %}
+      </div>
+
+      <nav class="left-card">
+        <div class="list-head">Channels</div>
+        {% if can_view %}
+          {% if channels %}
+            <ul class="channel-list">
+              {% for ch in channels %}
+                {# NOTE: link points back to the SAME page with ?c=slug #}
+                <li>
+                  <a class="channel-link {% if selected_channel and selected_channel.slug == ch.slug %}active{% endif %}"
+                     href="/groups/{{ group.slug }}?c={{ ch.slug }}">
+                    <span>#{{ ch.name }}</span>
+                    <span class="chips">
+                      {% if ch.kind != 'general' %}<span class="chip">{{ ch.kind|title }}</span>{% endif %}
+                      {% if ch.is_readonly %}<span class="chip">Readonly</span>{% endif %}
+                    </span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="muted small">No channels yet.</p>
+          {% endif %}
+        {% else %}
+          <p class="muted small">Join this {{ group.visibility }} group to view channels.</p>
+        {% endif %}
+      </nav>
+    </aside>
+
+    {# CENTER: Messages of selected channel #}
+    <main class="hub-center">
+      <section class="chat-wrapper">
+
+        <header class="chat-header">
+          <div class="chat-title">
+            <h1 class="mb-0">
+              {% if selected_channel %}#{{ selected_channel.name }}{% else %}Select a channel{% endif %}
+            </h1>
+          </div>
+          {% if selected_channel %}
+            <div class="channel-tags">
+              <span class="badge subtle">{{ selected_channel.kind|title }}</span>
+              {% if selected_channel.is_readonly %}
+                <span class="badge subtle">Readonly</span>
+              {% endif %}
+            </div>
+          {% endif %}
+        </header>
+
+        <div class="chat-body" id="messages">
+          {% if selected_channel and messages and messages|length > 0 %}
+            {% for m in messages %}
+              <div class="message-card">
+                <div class="message-head">
+                  <strong>{{ m.user_name }}</strong>
+                  <span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
+                  {% if me and me.role == 'admin' %}
+                    <form method="post"
+                          action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages/{{ m.id }}/delete"
+                          style="display:inline;">
+                      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                      <button class="btn danger tiny" type="submit" title="Delete message">🗑️</button>
+                    </form>
+                  {% endif %}
+                </div>
+                <div class="message-body">{{ m.body }}</div>
+              </div>
+            {% endfor %}
+          {% elseif selected_channel %}
+            <p class="muted empty-chat">No messages yet in #{{ selected_channel.name }}.</p>
+          {% else %}
+            <div class="placeholder">
+              <p class="muted">Pick a channel on the left to view messages.</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="chat-footer">
+          {% if selected_channel and can_post %}
+            <form method="POST"
+                  action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages"
+                  class="composer">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+              <textarea name="body" rows="2" required placeholder="Write a message..." class="input"></textarea>
+              <button class="btn primary" type="submit">Send</button>
+            </form>
+          {% elseif selected_channel %}
+            <p class="hint small muted text-center mt-2">You can’t post in this channel.</p>
+          {% endif %}
+        </div>
+
+      </section>
+    </main>
+
+    {# RIGHT: Channel info (top) + Create Channel (bottom) #}
+    <aside class="hub-right">
+      <div class="right-card">
+        <div class="list-head">Channel Info</div>
+        {% if selected_channel %}
+          <div class="info-grid">
+            <div><span class="muted small">Name</span><div>#{{ selected_channel.name }}</div></div>
+            <div><span class="muted small">Kind</span><div>{{ selected_channel.kind|title }}</div></div>
+            {% if selected_channel.description %}
+              <div><span class="muted small">About</span><div>{{ selected_channel.description }}</div></div>
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="muted small">Select a channel to see details.</p>
+        {% endif %}
+      </div>
+
+      {% if can_view and me and (me.role == 'admin' or (is_member and me.role == 'faculty')) %}
+        <div class="right-card">
+          <div class="list-head">Create a Channel</div>
+          <form method="POST" action="/groups/{{ group.slug }}/channels" class="auth-form" novalidate>
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+
+            <div class="field">
+              <label for="ch-name">Name</label>
+              <input id="ch-name" name="name" required placeholder="e.g., announcements, general" />
+            </div>
+
+            <div class="field">
+              <label for="ch-desc">Description <span class="muted">(optional)</span></label>
+              <input id="ch-desc" name="description" placeholder="Short description" />
+            </div>
+
+            <div class="field field-inline">
+              <input type="checkbox" id="ch-readonly" name="is_readonly" value="1">
+              <label for="ch-readonly">Read-only <span class="muted">(good for Announcements)</span></label>
+            </div>
+
+            <button class="btn primary" type="submit">Create Channel</button>
+          </form>
+        </div>
       {% endif %}
-    {% endif %}
-  </section>
-
-  {% if can_view and viewer and (viewer.role == 'admin' or (is_member and viewer.role == 'faculty')) %}
-    <section class="page-card" id="new-group">
-      <h2>Create a Channel</h2>
-
-      <form method="POST" action="/groups/{{ group.slug }}/channels" class="auth-form" novalidate>
-        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-
-        <div class="field">
-          <label for="ch-name">Name</label>
-          <input id="ch-name" name="name" required placeholder="e.g., announcements, general" />
-        </div>
-
-        <div class="field">
-          <label for="ch-desc">Description <span class="muted">(optional)</span></label>
-          <input id="ch-desc" name="description" placeholder="Short description" />
-        </div>
-
-        <div class="field">
-          <label for="ch-vis">Visibility</label>
-          <select id="ch-vis" name="visibility" required>
-            <option value="public" selected>public</option>
-            <option value="private">private</option>
-          </select>
-        </div>
-
-        <div class="field field-inline">
-          <label for="ch-readonly">Read-only <span class="muted">(good for Announcements)</span></label>
-          <input type="checkbox" id="ch-readonly" name="readonly" value="1">
-        </div>
-
-        <button class="btn primary" type="submit">Create Channel</button>
-      </form>
-    </section>
-  {% endif %}
-
+    </aside>
+  </div>
 </div>
 {% endblock %}

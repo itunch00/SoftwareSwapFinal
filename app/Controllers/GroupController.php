@@ -8,13 +8,19 @@ use App\Middleware\AuthGuard;
 use App\Support\Csrf;
 use App\Support\Flash;
 use Twig\Environment;
+use App\Services\ChannelService;
+use App\Services\MessageService;
+use App\Repositories\ChannelRepository;
 
 final class GroupController
 {
     public function __construct(
         private GroupService $groups,
         private AuthGuard $auth,
-        private Environment $twig
+        private Environment $twig,
+        private ChannelService $channels,
+        private MessageService $messagesSvc,
+        private ChannelRepository $channelRepo,
     ) {}
 
     /**
@@ -60,6 +66,7 @@ final class GroupController
      */
     public function show(string $slug, ?array $viewer): void
     {
+        // Base group view (group, channels, is_member, can_view, etc.)
         $view = $this->groups->getGroupView($slug, $viewer);
 
         if (!$view['group']) {
@@ -68,6 +75,35 @@ final class GroupController
             return;
         }
 
-        echo $this->twig->render('groups/show.twig', $view + ['viewer' => $viewer]);
+        // --- NEW: selected channel via ?c=slug (fallback to first channel) ---
+        $cSlug = isset($_GET['c']) ? trim((string)$_GET['c']) : null;
+        $selected = null;
+
+        if ($cSlug) {
+            $selected = $this->channelRepo->findByGroupAndSlug($view['group']['id'], $cSlug);
+        }
+        if (!$selected && !empty($view['channels'])) {
+            $selected = $view['channels'][0]; // optional auto-select
+        }
+
+        // --- Load messages + posting permission when selected ---
+        $messages   = [];
+        $canPost    = false;
+        $isMember   = (bool)($view['is_member'] ?? false);
+        $isAdmin    = ($viewer && ($viewer['role'] ?? '') === 'admin');
+
+        if ($selected) {
+            // reuse your existing paging size or change as you like
+            $messages = $this->messagesSvc->getMessagesForChannel($view['group'], $selected, 50);
+            $canPost  = $isAdmin || $isMember || (int)$selected['is_readonly'] === 0;
+        }
+
+        echo $this->twig->render('groups/show.twig', $view + [
+            'viewer'           => $viewer,
+            'selected_channel' => $selected,
+            'messages'         => $messages,
+            'can_post'         => $canPost,
+        ]);
     }
+
 }

@@ -52,7 +52,8 @@ final class ChannelController
                 Flash::success('Channel created successfully.');
             }
 
-            header('Location: /groups/' . $res['group']['slug'] . '/channels/' . $res['slug']);
+            header('Location: /groups/' . $res['group']['slug'] . '?c=' . $res['slug']);
+            // header('Location: /groups/' . $res['group']['slug'] . '/channels/' . $res['slug']);
             exit;
 
         } catch (\Throwable $e) {
@@ -72,39 +73,39 @@ final class ChannelController
      *
      * Access: Public groups are viewable by anyone; private groups require membership.
      */
-    public function show(string $groupSlug, string $channelSlug, ?array $viewer): void
-    {
-        $view = $this->svc->getChannelView($groupSlug, $channelSlug, $viewer);
+    // public function show(string $groupSlug, string $channelSlug, ?array $viewer): void
+    // {
+    //     $view = $this->svc->getChannelView($groupSlug, $channelSlug, $viewer);
 
-        // Group or channel not found → 404
-        if (!$view['group'] || !$view['channel']) {
-            http_response_code(404);
-            echo $this->twig->render('errors/404.twig');
-            return;
-        }
+    //     // Group or channel not found → 404
+    //     if (!$view['group'] || !$view['channel']) {
+    //         http_response_code(404);
+    //         echo $this->twig->render('errors/404.twig');
+    //         return;
+    //     }
 
-        // Private group & not a member → 403
-        if (!$view['can_view']) {
-            http_response_code(403);
-            echo $this->twig->render('errors/403.twig', [
-                'message' => 'Join this private group to view its channels.',
-            ]);
-            return;
-        }
+    //     // Private group & not a member → 403
+    //     if (!$view['can_view']) {
+    //         http_response_code(403);
+    //         echo $this->twig->render('errors/403.twig', [
+    //             'message' => 'Join this private group to view its channels.',
+    //         ]);
+    //         return;
+    //     }
 
-        // Messages for this channel (basic paging could read from query params later)
-        $messages = $this->msgSvc->getMessagesForChannel($view['group'], $view['channel'], 50);
+    //     // Messages for this channel (basic paging could read from query params later)
+    //     $messages = $this->msgSvc->getMessagesForChannel($view['group'], $view['channel'], 50);
 
-        // Posting permission: must be a member AND (channel writable OR user is faculty/admin)
-        $canPost = false;
-        if ($view['is_member']) {
-            $canPost = ((int)$view['channel']['is_readonly'] === 0)
-                || ($viewer && in_array($viewer['role'], ['faculty', 'admin'], true));
-        }
+    //     // Posting permission: must be a member AND (channel writable OR user is faculty/admin)
+    //     $canPost = false;
+    //     if ($view['is_member']) {
+    //         $canPost = ((int)$view['channel']['is_readonly'] === 0)
+    //             || ($viewer && in_array($viewer['role'], ['faculty', 'admin'], true));
+    //     }
 
-        echo $this->twig->render('channels/show.twig', $view + [
-            'messages' => $messages,
-            'can_post' => $canPost,
-        ]);
-    }
+    //     echo $this->twig->render('channels/show.twig', $view + [
+    //         'messages' => $messages,
+    //         'can_post' => $canPost,
+    //     ]);
+    // }
 }

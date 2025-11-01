@@ -476,3 +476,140 @@ body.nav-open{overflow:hidden}
   font-size: var(--fs-sm);
   border-radius: var(--radius-sm);
 }
+
+/* ===== Group Hub (3-pane) ===== */
+.group-hub { padding-top: 16px; }
+
+.hub-grid{
+  width: 100%;
+  max-width: 1400px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 280px 1fr 340px;  /* left | center | right */
+  align-items: stretch;
+}
+
+/* Make all three columns fill the viewport nicely */
+.hub-left, .hub-center, .hub-right { min-height: calc(100vh - 160px); }
+
+/* --- Uniform cards (fix: consistent inner padding on left + right) --- */
+.left-card, .right-card{
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  padding: 16px 14px;     /* << ensures equal padding for both sections */
+}
+.hub-left .left-card + .left-card { margin-top: 12px; }
+
+.left-header{
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.25rem;
+}
+.hub-title{ margin:0; font-size: 1.1rem; }
+
+.list-head{
+  font-weight: 700;
+  margin: 2px 0 10px;
+  color: var(--color-text);
+}
+
+/* --- Channel list (fix: complete active border ring & uniform spacing) --- */
+.channel-list{
+  list-style: none;
+  margin: 0;
+  padding: 8px;                          /* << uniform inner padding */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: calc(100vh - 260px);
+  overflow: auto;
+}
+
+.channel-link{
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  width: 100%;
+  padding: .60rem .75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-text);
+  text-decoration: none;
+  position: relative;
+}
+.channel-link:hover{ background:#f8fafc; }
+
+/* Active state ring (full surround) */
+.channel-link.active{
+  border-color: var(--color-primary);
+  background: #eef2ff;
+  box-shadow: 0 0 0 3px rgba(44,107,237,.18); /* << full ring */
+}
+
+/* Keyboard focus */
+.channel-link:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(44,107,237,.28);
+}
+
+.chips{ display:flex; gap:6px; margin-left:auto; }
+.chip{
+  font-size: .72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f4f4f7;
+  color: var(--color-muted);
+}
+
+/* --- Center column (chat fills height; only messages scroll) --- */
+.hub-center .chat-wrapper{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  padding: 12px 16px 8px 16px;
+}
+.hub-center .chat-body{
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 88px;
+}
+
+/* --- Right column --- */
+.right-card + .right-card{ margin-top: 12px; }
+.info-grid{ display:grid; grid-template-columns: 1fr; gap: 10px; }
+
+/* --- Responsive --- */
+@media (max-width: 1100px){
+  .hub-grid{ grid-template-columns: 240px 1fr 320px; }
+}
+/* ===== Mobile stacking refinement for Group Hub ===== */
+@media (max-width: 900px) {
+  .hub-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Preserve the same left → center → right order on mobile */
+  .hub-left {
+    order: 1;
+  }
+  .hub-center {
+    order: 2;
+  }
+  .hub-right {
+    order: 3;
+  }
+
+  /* Spacing between stacked cards */
+  .hub-left,
+  .hub-center,
+  .hub-right {
+    margin-bottom: 16px;
+  }
+}
+
