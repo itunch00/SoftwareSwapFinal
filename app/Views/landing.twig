@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>UAFS Campfire | Welcome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/assets/app.css">
+  <style>
+    .landing { 
+        min-height: 100vh; 
+        display:flex; 
+        flex-direction:column; 
+        background: #0b1220; 
+    }
+
+    .landing .nav-lite {
+        display:flex;
+        align-items:center;
+        padding:.75rem 1rem;
+        background: #041b38;           
+        color: #fff;
+        border-bottom:1px solid #0d305e;
+        position:sticky;
+        top:0;
+        z-index:1000;
+    }
+
+    .landing .nav-lite .brand {
+        display:flex; align-items:center; gap:.5rem;
+        color:#fff; font-weight:700; text-decoration:none;
+    }
+
+    .landing .nav-lite .brand img {
+        height:36px; width:auto; border-radius:6px;
+    }
+
+    .landing .nav-lite .btn-login {
+        background: transparent;
+        color:#fff;
+        border:1px solid rgba(255,255,255,.35);
+        padding:.45rem .8rem;
+        border-radius:.5rem;
+        text-decoration:none;
+        font-weight:600;
+    }
+
+    .landing .nav-lite .btn-login:hover {
+        background: #17a2b8
+    }
+
+    .landing .nav-lite > * {
+        flex: 1;
+    }
+
+    .landing .nav-lite .nav-center-title {
+        text-align: center;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .landing .nav-lite .right {
+        text-align: right;
+    }
+
+    @media (max-width: 640px) {
+    .landing .nav-lite {
+        height: auto;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+    }
+
+    .landing .nav-lite .brand span {
+        font-size: 1rem;               
+    }
+
+    .landing .nav-lite .brand img {
+        height: 36px;
+    }
+
+    .landing .nav-lite .btn-login {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.95rem;
+    }
+    }
+
+    .landing-hero {
+        background: radial-gradient(1200px 600px at 50% -10%, #0b3a6a 0%, #06233e 40%, #051b32 70%, #021327 100%);
+        color:#e5e7eb;
+        text-align:center;
+        padding:64px 16px 48px;
+    }
+    .landing-hero h1 { font-size: clamp(1.8rem, 3.8vw, 2.6rem); margin: 0 0 .5rem; }
+    .landing-hero p  { margin: .25rem 0 1.25rem; color:#cbd5e1; max-width:820px; margin-inline:auto; }
+    .landing-hero .cta {
+      display:inline-block; border:1px solid rgba(255,255,255,.6); color:#fff; text-decoration:none;
+      padding:.65rem 1.1rem; border-radius:.6rem; font-weight:600;
+    }
+    .landing-hero .cta:hover { background: #17a2b8; }
+
+    .landing-features { background:#111827; color:#d1d5db; padding: 36px 16px 60px; flex:1; }
+    .landing-features .grid {
+      max-width: 1100px; margin: 0 auto; display:grid; gap:16px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .landing-features .card {
+      grid-column: span 4;
+      background:#1f2937; border:1px solid #374151; border-radius: 12px; padding: 18px;
+      text-align:center; box-shadow: var(--shadow-sm);
+    }
+    .landing-features .icon { font-size: 28px; margin-bottom: 8px; }
+    .landing-features h5 { margin: 0 0 .35rem; color:#e5e7eb; }
+    .landing-features p  { margin: 0; color:#9ca3af; font-size: .96rem; }
+
+    @media (max-width: 980px) {
+      .landing-features .card { grid-column: span 6; }
+    }
+    @media (max-width: 640px) {
+      .landing-features .card { grid-column: span 12; }
+    }
+
+    .landing-footer {
+      text-align:center; color:#a3a3a3; background:#0b1220; border-top:1px solid #1f2937;
+      padding: 14px 8px;
+    }
+  </style>
+</head>
+<body class="landing">
+  <!-- Minimal top bar for guests -->
+  <header class="nav-lite">
+    <a class="brand" href="{{ brand_href|default('/login') }}">
+      <img src="/assets/uafsLion.png" alt="UAFS">
+      </a>
+
+    <div class="nav-center-title">
+      <span>UAFS Campfire</span>
+    </div>
+    
+    <div class="right">
+      <a class="btn-login" href="/login">Login</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="landing-hero">
+    <h1>Welcome to Campfire 🔥</h1>
+    <p>A social hub built by and for Computer Science students at UAFS. Connect, collaborate, and code together.</p>
+    <a class="cta" href="/signup">Join the Community</a>
+  </section>
+
+  <!-- Features grid -->
+  <section class="landing-features">
+  <div class="grid">
+    <div class="card">
+      <div class="icon">👥</div>
+      <h5>Groups & Communities</h5>
+      <p>Create and join dedicated groups for courses, clubs, or interests. Collaborate with your peers in organized spaces.</p>
+    </div>
+
+    <div class="card">
+      <div class="icon">💬</div>
+      <h5>Channel-Based Discussions</h5>
+      <p>Each group includes multiple channels — from general chats to announcements — keeping conversations focused and structured.</p>
+    </div>
+
+    <div class="card">
+      <div class="icon">📩</div>
+      <h5>1:1 Direct Messaging</h5>
+      <p>Connect privately with classmates or faculty members through real-time direct messages within the platform.</p>
+    </div>
+
+    <div class="card">
+      <div class="icon">🧑‍🏫</div>
+      <h5>Faculty & Admin Controls</h5>
+      <p>Faculty and admins can moderate groups, manage posts, and ensure a positive and productive environment for all members.</p>
+    </div>
+
+    <div class="card">
+      <div class="icon">🔒</div>
+      <h5>Privacy & Permissions</h5>
+      <p>Choose between public or private groups, and configure read-only announcement channels for official updates.</p>
+    </div>
+
+    <div class="card">
+      <div class="icon">🧠</div>
+      <h5>Smart, Modern Interface</h5>
+      <p>Enjoy a clean, responsive design built for both desktop and mobile — simple, elegant, and powered by modern web tech.</p>
+    </div>
+  </div>
+</section>
+
+
+  <footer class="landing-footer">
+    &copy; 2025 UAFS Campfire. Built with ❤️ by Team VWNT
+  </footer>
+</body>
+</html>

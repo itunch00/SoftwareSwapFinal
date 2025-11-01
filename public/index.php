@@ -54,7 +54,17 @@ try {
     $twig = $c->twig;
 
     // root -> login
-    if ($uri === '/' && $method === 'GET') { redirect('/login'); }
+    if ($uri === '/' && $method === 'GET') {
+        $viewer = $c->authGuard->userOrNull();
+        if ($viewer) {
+            redirect('/home'); // already signed in
+        }
+        echo $c->twig->render('landing.twig', [
+            'brand_href' => '/login',   // clicking brand can also take to login if you like
+        ]);
+        exit;
+    }
+    // if ($uri === '/' && $method === 'GET') { redirect('/login'); }
 
     // login
     if ($uri === '/login') {
