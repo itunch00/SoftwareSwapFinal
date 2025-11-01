@@ -613,3 +613,5 @@ body.nav-open{overflow:hidden}
   }
 }
 
+.nav-links .bi { font-size: 1.3rem; vertical-align: middle; }
+.nav-links a.nav-link { padding: .25rem .6rem; }
