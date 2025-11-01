@@ -28,8 +28,20 @@
 
         <header class="left-header">
           <h2 class="hub-title">{{ group.name }}</h2>
-          <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
+
+            {% if me and me.role == 'admin' %}
+              <form method="post"
+                    action="/groups/{{ group.slug }}/delete"
+                    onsubmit="return confirm('Delete the entire group \"{{ group.name }}\"? This cannot be undone.');">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="btn danger small" type="submit" title="Delete group">Delete group</button>
+              </form>
+            {% endif %}
+          </div>
         </header>
+
         {% if group.description %}<p class="muted small">{{ group.description }}</p>{% endif %}
 
         {% if me and me.role != 'admin' %}
@@ -55,16 +67,21 @@
           {% if channels %}
             <ul class="channel-list">
               {% for ch in channels %}
-                {# NOTE: link points back to the SAME page with ?c=slug #}
-                <li>
+                <li style="display:flex;align-items:center;gap:.5rem">
                   <a class="channel-link {% if selected_channel and selected_channel.slug == ch.slug %}active{% endif %}"
-                     href="/groups/{{ group.slug }}?c={{ ch.slug }}">
+                    href="/groups/{{ group.slug }}?c={{ ch.slug }}"
+                    style="flex:1">
                     <span>#{{ ch.name }}</span>
-                    <span class="chips">
-                      {% if ch.kind != 'general' %}<span class="chip">{{ ch.kind|title }}</span>{% endif %}
-                      {% if ch.is_readonly %}<span class="chip">Readonly</span>{% endif %}
-                    </span>
                   </a>
+
+                  {% if me and (me.role == 'admin') %}
+                    <form method="post"
+                          action="/groups/{{ group.slug }}/channels/{{ ch.slug }}/delete"
+                          onsubmit="return confirm('Delete channel #{{ ch.name }}? Messages in this channel will be removed.');">
+                      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                      <button class="btn danger small" type="submit" title="Delete channel">🗑️</button>
+                    </form>
+                  {% endif %}
                 </li>
               {% endfor %}
             </ul>
@@ -147,6 +164,15 @@
       <div class="right-card">
         <div class="list-head">Channel Info</div>
         {% if selected_channel %}
+          {% if me and (me.role == 'admin') %}
+            <form method="post"
+                  action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/delete"
+                  onsubmit="return confirm('Delete channel #{{ selected_channel.name }}?');"
+                  style="margin-top:.5rem">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+              <button class="btn danger small" type="submit">Delete this channel</button>
+            </form>
+          {% endif %}
           <div class="info-grid">
             <div><span class="muted small">Name</span><div>#{{ selected_channel.name }}</div></div>
             <div><span class="muted small">Kind</span><div>{{ selected_channel.kind|title }}</div></div>
