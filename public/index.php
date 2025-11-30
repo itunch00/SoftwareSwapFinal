@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use App\Support\Container;
@@ -7,7 +8,7 @@ use App\Controllers\GroupController;
 use App\Controllers\MembershipController;
 use App\Controllers\ChannelController;
 use App\Controllers\MessageController;
-use App\Controllers\ProfileController;  
+use App\Controllers\ProfileController;
 use App\Controllers\DmController;
 use App\Controllers\AdminModerationController;
 use Twig\Environment;
@@ -21,21 +22,29 @@ $isDebug = (($_ENV['APP_DEBUG'] ?? 'false') === 'true');
 ini_set('display_errors', $isDebug ? '1' : '0');
 ini_set('log_errors', '1');
 
-function send(string $html, int $code = 200): void {
+function send(string $html, int $code = 200): void
+{
     http_response_code($code);
     header('Content-Type: text/html; charset=utf-8');
-    echo $html; exit;
+    echo $html;
+    exit;
 }
-function redirect(string $path, int $code = 302): void {
+function redirect(string $path, int $code = 302): void
+{
     if (!str_starts_with($path, '/')) $path = '/' . ltrim($path, '/');
-    header('Location: ' . $path, true, $code); exit;
+    header('Location: ' . $path, true, $code);
+    exit;
 }
-function notFound(Environment $twig): void { 
+function notFound(Environment $twig): void
+{
     http_response_code(404);
     echo $twig->render('errors/404.twig');
     return;
- }
-function methodNotAllowed(): void { send('Method Not Allowed', 405); }
+}
+function methodNotAllowed(): void
+{
+    send('Method Not Allowed', 405);
+}
 
 try {
     $c = new Container();
@@ -69,22 +78,37 @@ try {
     // login
     if ($uri === '/login') {
         $c->guestGuard->mustBeGuest();
-        if ($method === 'GET')  { $authController->showLogin(); exit; }
-        if ($method === 'POST') { $authController->login();     exit; }
+        if ($method === 'GET') {
+            $authController->showLogin();
+            exit;
+        }
+        if ($method === 'POST') {
+            $authController->login();
+            exit;
+        }
         methodNotAllowed();
     }
 
     // signup
     if ($uri === '/signup') {
         $c->guestGuard->mustBeGuest();
-        if ($method === 'GET')  { $authController->showSignup(); exit; }
-        if ($method === 'POST') { $authController->signup();     exit; }
+        if ($method === 'GET') {
+            $authController->showSignup();
+            exit;
+        }
+        if ($method === 'POST') {
+            $authController->signup();
+            exit;
+        }
         methodNotAllowed();
     }
 
     // logout
     if ($uri === '/logout') {
-        if ($method === 'POST') { $authController->logout(); exit; }
+        if ($method === 'POST') {
+            $authController->logout();
+            exit;
+        }
         methodNotAllowed();
     }
 
@@ -111,7 +135,7 @@ try {
             echo $c->twig->render('home.twig', [
                 'user'        => $user,
                 'csrf_token'  => \App\Support\Csrf::token($c),
-                'admin_groups'=> $result,   // NOTE: now an array with items+meta
+                'admin_groups' => $result,   // NOTE: now an array with items+meta
             ]);
             exit;
         }
@@ -131,19 +155,23 @@ try {
 
     // groups
     if ($uri === '/groups' && $method === 'POST') {
-        $groupController->create($_POST); exit;
+        $groupController->create($_POST);
+        exit;
     }
     if ($method === 'GET' && preg_match('#^/groups/([a-z0-9\-]+)$#', $uri, $m)) {
         $viewer = $c->authGuard->userOrNull();
-        $groupController->show($m[1], $viewer); exit;
+        $groupController->show($m[1], $viewer);
+        exit;
     }
 
     // memberships
     if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/join$#', $uri, $m)) {
-        $membershipController->join($m[1], $_POST); exit;
+        $membershipController->join($m[1], $_POST);
+        exit;
     }
     if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/leave$#', $uri, $m)) {
-        $membershipController->leave($m[1], $_POST); exit;
+        $membershipController->leave($m[1], $_POST);
+        exit;
     }
 
     // CREATE channel
@@ -165,28 +193,44 @@ try {
 
     // GET /profile
     if ($uri === '/profile' && $method === 'GET') {
-        $profile->me(); exit;
+        $profile->me();
+        exit;
     }
 
     // POST /profile
     if ($uri === '/profile' && $method === 'POST') {
-        $profile->update($_POST); exit;
+        $profile->update($_POST);
+        exit;
+    }
+
+    // GET /profile/{id}
+    if ($method === 'GET' && preg_match('#^/profile/(\d+)$#', $uri, $m)) {
+        $profile->show((int)$m[1]);
+        exit;
     }
 
     // GET /dms
-    if ($uri === '/dms' && $method === 'GET') { $dm->index(); exit; }
+    if ($uri === '/dms' && $method === 'GET') {
+        $dm->index();
+        exit;
+    }
 
     // GET /dms/new?user_id=123
-    if ($uri === '/dms/new' && $method === 'GET') { $dm->new($_GET); exit; }
+    if ($uri === '/dms/new' && $method === 'GET') {
+        $dm->new($_GET);
+        exit;
+    }
 
     // GET /dms/{id}
     if ($method === 'GET' && preg_match('#^/dms/(\d+)$#', $uri, $m)) {
-        $dm->show((int)$m[1]); exit;
+        $dm->show((int)$m[1]);
+        exit;
     }
 
     // POST /dms/{id}/messages
     if ($method === 'POST' && preg_match('#^/dms/(\d+)/messages$#', $uri, $m)) {
-        $dm->send((int)$m[1], $_POST); exit;
+        $dm->send((int)$m[1], $_POST);
+        exit;
     }
 
     // POST /dms/start
@@ -196,40 +240,51 @@ try {
     }
 
     // DELETE message (admin)
-    if ($method === 'POST' &&
-        preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/messages/(\d+)/delete$#', $uri, $m)) {
-        $admin->deleteMessage($m[1], $m[2], (int)$m[3], $_POST); exit;
+    if (
+        $method === 'POST' &&
+        preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/messages/(\d+)/delete$#', $uri, $m)
+    ) {
+        $admin->deleteMessage($m[1], $m[2], (int)$m[3], $_POST);
+        exit;
     }
 
     // DELETE channel (admin)
-    if ($method === 'POST' &&
-        preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/delete$#', $uri, $m)) {
-        $admin->deleteChannel($m[1], $m[2], $_POST); exit;
+    if (
+        $method === 'POST' &&
+        preg_match('#^/groups/([a-z0-9\-]+)/channels/([a-z0-9\-]+)/delete$#', $uri, $m)
+    ) {
+        $admin->deleteChannel($m[1], $m[2], $_POST);
+        exit;
     }
 
     // Admin user moderation UI
     if ($method === 'GET' && $uri === '/admin/users') {
-        $admin->usersPage(); exit;
+        $admin->usersPage();
+        exit;
     }
 
     // Ban by email
     if ($method === 'POST' && $uri === '/admin/users/ban-by-email') {
-        $admin->banByEmail($_POST); exit;
+        $admin->banByEmail($_POST);
+        exit;
     }
 
     // Unban by id
     if ($method === 'POST' && preg_match('#^/admin/users/(\d+)/unban$#', $uri, $m)) {
-        $admin->unban((int)$m[1], $_POST); exit;
+        $admin->unban((int)$m[1], $_POST);
+        exit;
     }
 
     // POST /admin/groups/{id}/delete
     if ($method === 'POST' && preg_match('#^/admin/groups/(\d+)/delete$#', $uri, $m)) {
-        $admin->deleteGroup((int)$m[1], $_POST); exit;
+        $admin->deleteGroup((int)$m[1], $_POST);
+        exit;
     }
 
     notFound($twig);
 } catch (Throwable $e) {
-    $errorMsg = sprintf("[%s] %s in %s:%d\n%s",
+    $errorMsg = sprintf(
+        "[%s] %s in %s:%d\n%s",
         date('Y-m-d H:i:s'),
         $e->getMessage(),
         $e->getFile(),

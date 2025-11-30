@@ -1,0 +1,44 @@
+{% extends "layouts/base.twig" %}
+{% block title %}{{ user.display_name ?? user.username }} — Profile{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+  <div class="page-card">
+    <h1>{{ user.display_name ?? user.username }}</h1>
+
+    {% if profile %}
+      {% if profile.bio %}
+        <p><strong>Bio:</strong> {{ profile.bio }}</p>
+      {% endif %}
+
+      {% if profile.website %}
+        <p><strong>Website:</strong>
+           <a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a>
+        </p>
+      {% endif %}
+
+      {% if profile.github %}
+        <p><strong>GitHub:</strong>
+           <a href="{{ profile.github }}" target="_blank">{{ profile.github }}</a>
+        </p>
+      {% endif %}
+
+      {% if profile.linkedin %}
+        <p><strong>LinkedIn:</strong>
+           <a href="{{ profile.linkedin }}" target="_blank">{{ profile.linkedin }}</a>
+        </p>
+      {% endif %}
+
+      {% if profile.pronouns %}
+        <p><strong>Pronouns:</strong> {{ profile.pronouns }}</p>
+      {% endif %}
+
+      {% if profile.timezone %}
+        <p><strong>Timezone:</strong> {{ profile.timezone }}</p>
+      {% endif %}
+    {% else %}
+      <p class="muted">This user has not created a profile yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

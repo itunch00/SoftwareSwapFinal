@@ -5,6 +5,7 @@ namespace App\Services;
 
 use App\Repositories\UserRepository;
 use App\Repositories\UserProfileRepository;
+use Twig\Environment;
 
 final class ProfileService
 {
@@ -70,10 +71,11 @@ final class ProfileService
         if ($u === null) return null;
         $u = trim($u);
         if ($u === '') return null;
-        // If user enters handle like "github.com/name", add scheme
+        //If user enters handle like "github.com/name", add scheme
         if (!preg_match('#^https?://#i', $u)) {
             $u = 'https://' . $u;
         }
         return filter_var($u, FILTER_VALIDATE_URL) ? $u : null;
     }
+
 }
