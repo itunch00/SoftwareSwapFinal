@@ -18,6 +18,7 @@ use App\Services\MessageService;
 use App\Services\ProfileService;
 use App\Services\DmService;
 use App\Services\ModerationService;
+use App\Services\NotificationService;
 
 use App\Repositories\GroupRepository;
 use App\Repositories\ChannelRepository;
@@ -46,6 +47,7 @@ final class Container
     public DmService $dmService;
     public ModerationService $moderationService;
     public ChannelRepository $channelRepository;
+    public NotificationService $notificationService;
 
     public function __construct()
     {
@@ -90,6 +92,21 @@ final class Container
             'cache' => false,
             'debug' => (($_ENV['APP_DEBUG'] ?? 'false') === 'true'),
         ]);
+
+        //gets notifications
+        $this->twig->addFunction(new \Twig\TwigFunction('get_notifications', function($userId) {
+            if (!$userId) return [];
+            $stmt = $this->db->prepare("
+                SELECT n.id, n.name, n.time_sent
+                FROM notifications n
+                JOIN notification_assignments na ON na.notif_id = n.id
+                WHERE na.user_id = :uid
+                ORDER BY n.time_sent DESC
+            ");
+            $stmt->execute([':uid' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }));
+
         if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
             $this->twig->addExtension(new DebugExtension());
         }
@@ -133,6 +150,7 @@ final class Container
         $this->profileService    = new ProfileService($userRepo, $profileRepo);
         $this->dmService = new DmService($dmConvRepo, $dmMsgRepo, $userRepo);
         $this->moderationService = new ModerationService($userRepo, $channelRepo, $messageRepo, $moderationActionRepo);
+        $this->notificationService = new NotificationService($this->db);
         $this->channelRepository = $channelRepo;
     }
 }

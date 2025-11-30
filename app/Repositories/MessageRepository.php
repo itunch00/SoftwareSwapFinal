@@ -18,14 +18,74 @@ final class MessageRepository
      * @return int              New message id.
      */
     public function create(int $channelId, int $userId, string $body): int
-    {
+{
+        // inserts the message
         $st = $this->db->prepare(
             "INSERT INTO channel_messages (channel_id, user_id, body)
-             VALUES (:cid, :uid, :body)"
+            VALUES (:cid, :uid, :body)"
         );
         $st->execute([':cid' => $channelId, ':uid' => $userId, ':body' => $body]);
-        return (int)$this->db->lastInsertId();
+        $messageId = (int)$this->db->lastInsertId();
+
+        // gets channel info
+        $st = $this->db->prepare(
+            "SELECT c.group_id, c.name AS channel_name, g.name AS group_name
+            FROM channels c
+            JOIN groups g ON g.id = c.group_id
+            WHERE c.id = :cid"
+        );
+        $st->execute([':cid' => $channelId]);
+        $info = $st->fetch(PDO::FETCH_ASSOC);
+
+        if (!$info) {
+            return $messageId; // Should never happen, but fail gracefully
+        }
+
+        $groupId      = (int)$info['group_id'];
+        $groupName    = $info['group_name'];
+        $channelName  = $info['channel_name'];
+
+        // makes the notification text
+        $notifText = sprintf(
+            "there are updates in group %s in channel %s",
+            $groupName,
+            $channelName
+        );
+
+        // creates the notification
+        $st = $this->db->prepare(
+            "INSERT INTO notifications (name, time_sent)
+            VALUES (:name, NOW())"
+        );
+        $st->execute([':name' => $notifText]);
+
+        $notifId = (int)$this->db->lastInsertId();
+
+        // sends notification to all group members (not the sender) unless they already have the notification to prevent clutter.
+        $st = $this->db->prepare(
+            "INSERT INTO notification_assignments (notif_id, user_id)
+            SELECT :nid, gm.user_id
+            FROM group_memberships gm
+            WHERE gm.group_id = :gid
+            AND gm.status = 'active'
+            AND gm.user_id <> :sender_id
+            AND NOT EXISTS (
+                SELECT 1
+                FROM notification_assignments na
+                JOIN notifications n ON n.id = na.notif_id
+                WHERE na.user_id = gm.user_id
+                    AND n.name = :nname
+            )"
+    );
+        $st->execute([
+            ':nid'    => $notifId,
+            ':gid'    => $groupId,
+            ':sender_id' => $userId,
+            ':nname'  => $notifText
+        ]);
+         return $messageId;
     }
+
 
     /**
      * List messages for a channel (newest-last) with simple pagination.

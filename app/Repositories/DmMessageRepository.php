@@ -14,18 +14,82 @@ final class DmMessageRepository
      * @return int New message ID
      */
     public function create(int $conversationId, int $senderId, string $body): int
-    {
-        $sql = "
-            INSERT INTO dm_messages (conversation_id, sender_id, body)
-            VALUES (:cid, :sid, :body)
-        ";
-        $st = $this->db->prepare($sql);
-        $st->bindValue(':cid',  $conversationId, PDO::PARAM_INT);
-        $st->bindValue(':sid',  $senderId,       PDO::PARAM_INT);
-        $st->bindValue(':body', $body,           PDO::PARAM_STR);
-        $st->execute();
+{
+        //inserts the message
+        $st = $this->db->prepare(
+            "INSERT INTO dm_messages (conversation_id, sender_id, body)
+            VALUES (:cid, :sid, :body)"
+        );
+        $st->execute([
+            ':cid'  => $conversationId,
+            ':sid'  => $senderId,
+            ':body' => $body
+        ]);
 
-        return (int)$this->db->lastInsertId();
+        $messageId = (int)$this->db->lastInsertId();
+
+        //gets the userid of the recipient
+        $st = $this->db->prepare(
+            "SELECT user1_id, user2_id
+            FROM dm_conversations
+            WHERE id = :cid"
+        );
+        $st->execute([':cid' => $conversationId]);
+        $conv = $st->fetch(PDO::FETCH_ASSOC);
+
+        if (!$conv) {
+            return $messageId; // fallback safety
+        }
+
+        $user1 = (int)$conv['user1_id'];
+        $user2 = (int)$conv['user2_id'];
+
+        if($senderId === $user1) {
+            $recipientId = $user2;
+        }else {
+            $recipientId = $user1;
+        }
+        //gets the username of the sender
+        $st = $this->db->prepare("SELECT display_name FROM users WHERE id = :id");
+        $st->execute([':id' => $senderId]);
+        $senderName = $st->fetchColumn();
+
+        if (!$senderName) {
+            $senderName = 'User'; // fallback
+        }
+
+        //notif text
+        $notifText = sprintf("You have new DMs from %s", $senderName);
+
+        //creates the notification
+        $st = $this->db->prepare(
+            "INSERT INTO notifications (name, time_sent)
+            VALUES (:name, NOW())"
+        );
+        $st->execute([':name' => $notifText]);
+        $notifId = (int)$this->db->lastInsertId();
+
+        //assigns it to the recipient if they do not already have a notification from this DM conversation
+        $st = $this->db->prepare(
+            "INSERT INTO notification_assignments (notif_id, user_id)
+            SELECT v.nid, v.uid
+            FROM (SELECT :nid AS nid, :uid AS uid) AS v
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM notification_assignments na
+                JOIN notifications n ON n.id = na.notif_id
+                WHERE na.user_id = v.uid
+                AND n.name = :nname
+            )"
+        );
+
+        $st->execute([
+            ':nid' => $notifId,
+            ':uid' => $recipientId,
+            ':nname' => $notifText
+        ]);
+        
+        return $messageId;
     }
 
     /**
