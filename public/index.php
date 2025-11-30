@@ -48,6 +48,7 @@ try {
     $membershipController = new MembershipController($c->membershipService, $c->authGuard);
     $channelController = new ChannelController($c->channelService, $c->authGuard, $c->twig, $c->messageService);
     $messageController = new MessageController($c->messageService, $c->authGuard);
+    $notificationController = new \App\Controllers\NotificationController($c->authGuard, $c->notificationService);
     $profile = new ProfileController($c->profileService, $c->authGuard, $c->twig);
     $dm = new DmController($c->dmService, $c->authGuard, $c->twig);
     $admin = new AdminModerationController($c->moderationService, $c->authGuard, $c->groupService, $c->channelService, $c->messageService, $c->twig);
@@ -230,6 +231,12 @@ try {
     // POST /admin/groups/{id}/delete
     if ($method === 'POST' && preg_match('#^/admin/groups/(\d+)/delete$#', $uri, $m)) {
         $admin->deleteGroup((int)$m[1], $_POST); exit;
+    }
+
+    // Clear notifications
+    if ($uri === '/notifications/clear' && $method === 'POST') {
+        $notificationController->clearAll();
+        exit;
     }
 
     notFound($twig);

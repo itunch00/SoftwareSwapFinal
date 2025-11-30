@@ -1,4 +1,4 @@
-# uafs_cs_social
+# SoftwareSwapFinal
 ### step1: Requirements: 
 1. Install a full LAMP stack on openSUSE( Apache, MariaDB, PHP, PHP-extensions):
    #### Option1:
@@ -55,3 +55,6 @@ mysql -u uafs_app -p uafs_social < database/migrations/006_create_user_profiles.
 mysql -u uafs_app -p uafs_social < database/migrations/007_create_dm_conversations.sql
 mysql -u uafs_app -p uafs_social < database/migrations/008_create_dm_messages.sql
 mysql -u uafs_app -p uafs_social < database/migrations/009_create_moderation_actions.sql
+#### New from Swap
+mysql -u uafs_app -p uafs_social < database/migrations/010_create_notifications.sql
+mysql -u uafs_app -p uafs_social < database/migrations/011_create_notification_assignments.sql
