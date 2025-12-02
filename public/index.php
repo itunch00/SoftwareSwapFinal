@@ -169,6 +169,12 @@ try {
         $profile->me(); exit;
     }
 
+    // GET /profile/{id}
+    if ($method === 'GET' && preg_match('#^/profile/(\d+)$#', $uri, $m)) {
+        $profile->show((int)$m[1]);
+        exit;
+    }
+
     // POST /profile
     if ($uri === '/profile' && $method === 'POST') {
         $profile->update($_POST); exit;

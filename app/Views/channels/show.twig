@@ -1,81 +1,91 @@
 {# app/Views/channels/show.twig #}
 {% extends "layouts/base.twig" %}
-{% block title %}#{{ channel.name }} — {{ group.name }} — UAFS Social{% endblock %}
+{% block title %}#{{ channel.name }}
+	—
+	{{ group.name }}
+	— UAFS Social
+{% endblock %}
 {% set me = app.user %}
 
 {% block body %}
-<div class="page-wrap chat-page"> {# chat-page scopes the lock-down rules #}
+	<div
+		class="page-wrap chat-page">
+		{# chat-page scopes the lock-down rules #}
 
-  <section class="chat-wrapper">
-    <!-- Channel Header -->
-    <header class="chat-header">
-      <div class="chat-title">
-        <a href="/groups/{{ group.slug }}" class="back-link">&larr; {{ group.name }}</a>
-        <h1 class="mb-0">#{{ channel.name }}</h1>
-      </div>
+		<section
+			class="chat-wrapper">
+			<!-- Channel Header -->
+			<header class="chat-header">
+				<div class="chat-title">
+					<a href="/groups/{{ group.slug }}" class="back-link">&larr;
+						{{ group.name }}</a>
+					<h1 class="mb-0">#{{ channel.name }}</h1>
+				</div>
 
-      <div class="channel-tags">
-        <span class="badge subtle">{{ channel.kind|title }}</span>
-        {% if channel.is_readonly %}
-          <span class="badge subtle">Readonly</span>
-        {% endif %}
-      </div>
+				<div class="channel-tags">
+					<span class="badge subtle">{{ channel.kind|title }}</span>
+					{% if channel.is_readonly %}
+						<span class="badge subtle">Readonly</span>
+					{% endif %}
+				</div>
 
-      {% if me and me.role == 'admin' %}
-        <form method="post"
-              action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/delete"
-              class="delete-form">
-          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-          <input name="reason" type="text" placeholder="Reason (optional)" class="input small">
-          <button class="btn danger small" type="submit">Delete Channel</button>
-        </form>
-      {% endif %}
-    </header>
+				{% if me and me.role == 'admin' %}
+					<form method="post" action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/delete" class="delete-form">
+						<input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+						<input name="reason" type="text" placeholder="Reason (optional)" class="input small">
+						<button class="btn danger small" type="submit">Delete Channel</button>
+					</form>
+				{% endif %}
+			</header>
 
-    {# Flash messages live INSIDE the white box, so they don't push the page #}
-    {% set f = flash() %}
-    {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
-    {% for msg in f.error ?? [] %}  <div class="alert alert-error">{{ msg }}</div>{% endfor %}
+			{# Flash messages live INSIDE the white box, so they don't push the page #}
+			{% set f = flash() %}
+			{% for msg in f.success ?? [] %}
+				<div class="alert alert-success">{{ msg }}</div>
+			{% endfor %}
+			{% for msg in f.error ?? [] %}
+				<div class="alert alert-error">{{ msg }}</div>
+			{% endfor %}
 
-    <!-- Messages (only this scrolls) -->
-    <div class="chat-body">
-      {% if messages and messages|length > 0 %}
-        {% for m in messages %}
-          <div class="message-card">
-            <div class="message-head">
-              <strong>{{ m.user_name }}</strong>
-              <span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
-              {% if app.user and app.user.role == 'admin' %}
-                <form method="post"
-                      action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages/{{ m.id }}/delete"
-                      style="display:inline;">
-                  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                  <button class="btn danger tiny" type="submit" title="Delete message">🗑️</button>
-                </form>
-              {% endif %}
-            </div>
-            <div class="message-body">{{ m.body }}</div>
-          </div>
-        {% endfor %}
-      {% else %}
-        <p class="muted empty-chat">No messages yet. Be the first to start the conversation!</p>
-      {% endif %}
-    </div>
+			<!-- Messages (only this scrolls) -->
+			<div class="chat-body">
+				{% if messages and messages|length > 0 %}
+					{% for m in messages %}
+						<div class="message-card">
+							<div class="message-head">
+								<strong>
+									<a href="/profile/{{ m.user_id }}" class="user-link">
+										{{ m.user_name }}
+									</a>
+								</strong>
+								<span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
+								{% if app.user and app.user.role == 'admin' %}
+									<form method="post" action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages/{{ m.id }}/delete" style="display:inline;">
+										<input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+										<button class="btn danger tiny" type="submit" title="Delete message">🗑️</button>
+									</form>
+								{% endif %}
+							</div>
+							<div class="message-body">{{ m.body }}</div>
+						</div>
+					{% endfor %}
+				{% else %}
+					<p class="muted empty-chat">No messages yet. Be the first to start the conversation!</p>
+				{% endif %}
+			</div>
 
-    <!-- Sticky composer -->
-    <div class="chat-footer">
-      {% if can_post %}
-        <form method="POST"
-              action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages"
-              class="composer">
-          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-          <textarea name="body" rows="2" required placeholder="Write a message..." class="input"></textarea>
-          <button class="btn primary" type="submit">Send</button>
-        </form>
-      {% else %}
-        <p class="hint small muted text-center mt-2">You can’t post in this channel.</p>
-      {% endif %}
-    </div>
-  </section>
-</div>
+			<!-- Sticky composer -->
+			<div class="chat-footer">
+				{% if can_post %}
+					<form method="POST" action="/groups/{{ group.slug }}/channels/{{ channel.slug }}/messages" class="composer">
+						<input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+						<textarea name="body" rows="2" required placeholder="Write a message..." class="input"></textarea>
+						<button class="btn primary" type="submit">Send</button>
+					</form>
+				{% else %}
+					<p class="hint small muted text-center mt-2">You can’t post in this channel.</p>
+				{% endif %}
+			</div>
+		</section>
+	</div>
 {% endblock %}

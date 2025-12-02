@@ -1,9 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controllers;
 
 use App\Services\ProfileService;
+use App\Repositories\UserRepository;
 use App\Middleware\AuthGuard;
 use App\Support\Csrf;
 use App\Support\Flash;
@@ -54,5 +56,21 @@ final class ProfileController
 
         header('Location: /profile');
         exit;
+    }
+
+    public function show(int $id)
+    {
+        // Reuse the service you already have
+        $view = $this->svc->getMeView($id);
+
+        if (!$view || !$view['user']) {
+            Flash::error("User not found.");
+            return redirect('/home');
+        }
+
+        echo $this->twig->render('profile/show.twig', [
+            'user'    => $view['user'],
+            'profile' => $view['profile'],
+        ]);
     }
 }
