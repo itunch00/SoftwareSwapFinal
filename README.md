@@ -46,15 +46,15 @@ php -r 'echo password_hash("Passw0rd!", PASSWORD_DEFAULT), PHP_EOL;'
 
 ### Step5:  Commands used to run the queries for generating and seeding the data in the uafs_cs_social mariadb.
 
-mysql -u uafs_app -p uafs_social < database/migrations/001_create_users.sql
-mysql -u uafs_app -p uafs_social < database/migrations/002_create_groups.sql
-mysql -u uafs_app -p uafs_social < database/migrations/003_create_channels.sql
-mysql -u uafs_app -p uafs_social < database/migrations/004_create_group_memberships.sql
-mysql -u uafs_app -p uafs_social < database/migrations/005_create_channel_messages.sql
-mysql -u uafs_app -p uafs_social < database/migrations/006_create_user_profiles.sql
-mysql -u uafs_app -p uafs_social < database/migrations/007_create_dm_conversations.sql
-mysql -u uafs_app -p uafs_social < database/migrations/008_create_dm_messages.sql
-mysql -u uafs_app -p uafs_social < database/migrations/009_create_moderation_actions.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/001_create_users.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/002_create_groups.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/003_create_channels.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/004_create_group_memberships.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/005_create_channel_messages.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/006_create_user_profiles.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/007_create_dm_conversations.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/008_create_dm_messages.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/009_create_moderation_actions.sql
 #### New from Swap (I had more luck doing: mariadb -u root -p uafs_cs_social < path/to/sql/file
-mysql -u uafs_app -p uafs_social < database/migrations/010_create_notifications.sql
-mysql -u uafs_app -p uafs_social < database/migrations/011_create_notification_assignments.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/010_create_notifications.sql
+mysql -u uafs_app -p uafs_cs_social < database/migrations/011_create_notification_assignments.sql
