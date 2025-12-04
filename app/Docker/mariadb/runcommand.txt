@@ -1,0 +1,16 @@
+docker run -d \
+  --name mariadb \
+  --network uafs-net \
+  -e MYSQL_ROOT_PASSWORD=0309 \
+  -v /home/nancy/uafs-cs-social/all_databases.sql:/docker-entrypoint-initdb.d/all_databases.sql \
+  mariadb:11.4
+
+docker exec -it mariadb mariadb -u root -p'0309' -e "CREATE USER 'pubuser'@'%' IDENTIFIED BY 'password';"
+
+docker exec -it mariadb mariadb -u root -p'0309' -e "GRANT ALL PRIVILEGES ON \`uafs_app\`.* TO 'pubuser'@'%';"
+docker exec -it mariadb mariadb -u root -p'0309' -e "GRANT ALL PRIVILEGES ON \`uafs_cs_social\`.* TO 'pubuser'@'%';"
+docker exec -it mariadb mariadb -u root -p'0309' -e "FLUSH PRIVILEGES;"
+
+//DUMP
+docker exec -it mariadb mariadb-dump -u root -p'0309' --all-databases > /home/nancy/uafs-cs-social/all_databases.sql
+

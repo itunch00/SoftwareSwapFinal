@@ -68,7 +68,7 @@ final class Container
         // --- Database (PDO) ---
         $dsn = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
-            $_ENV['DB_HOST'] ?? '127.0.0.1',
+            $_ENV['DB_HOST'] ?? 'mariadb',
             $_ENV['DB_PORT'] ?? '3306',
             $_ENV['DB_NAME'] ?? 'uafs_social'
         );
@@ -76,7 +76,7 @@ final class Container
         $this->db = new PDO(
             $dsn,
             $_ENV['DB_USER'] ?? 'uafs_app',
-            $_ENV['DB_PASS'] ?? '',
+            $_ENV['DB_PASS'] ?? 'yourpassword',
             [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
