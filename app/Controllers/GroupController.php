@@ -23,12 +23,6 @@ final class GroupController
         private ChannelRepository $channelRepo,
     ) {}
 
-    /**
-     * Handle POST /groups to create a group and redirect to its page.
-     *
-     * @param array $post Expected: _csrf, name, description?, visibility?
-     * @return void
-     */
     public function create(array $post): void
     {
         Csrf::mustValidate($post['_csrf'] ?? null);
@@ -57,16 +51,8 @@ final class GroupController
         }
     }
 
-    /**
-     * Handle GET /groups/{slug} to show a group.
-     *
-     * @param string $slug
-     * @param array|null $viewer
-     * @return void
-     */
     public function show(string $slug, ?array $viewer): void
     {
-        // Base group view (group, channels, is_member, can_view, etc.)
         $view = $this->groups->getGroupView($slug, $viewer);
 
         if (!$view['group']) {
@@ -75,7 +61,6 @@ final class GroupController
             return;
         }
 
-        // --- NEW: selected channel via ?c=slug (fallback to first channel) ---
         $cSlug = isset($_GET['c']) ? trim((string)$_GET['c']) : null;
         $selected = null;
 
@@ -83,19 +68,22 @@ final class GroupController
             $selected = $this->channelRepo->findByGroupAndSlug($view['group']['id'], $cSlug);
         }
         if (!$selected && !empty($view['channels'])) {
-            $selected = $view['channels'][0]; // optional auto-select
+            $selected = $view['channels'][0];
         }
 
-        // --- Load messages + posting permission when selected ---
         $messages   = [];
         $canPost    = false;
         $isMember   = (bool)($view['is_member'] ?? false);
         $isAdmin    = ($viewer && ($viewer['role'] ?? '') === 'admin');
+        $latestMessage = null;
 
         if ($selected) {
-            // reuse your existing paging size or change as you like
             $messages = $this->messagesSvc->getMessagesForChannel($view['group'], $selected, 50);
             $canPost  = $isAdmin || $isMember || (int)$selected['is_readonly'] === 0;
+
+            if (!empty($messages)) {
+                $latestMessage = end($messages);
+            }
         }
 
         echo $this->twig->render('groups/show.twig', $view + [
@@ -103,7 +91,30 @@ final class GroupController
             'selected_channel' => $selected,
             'messages'         => $messages,
             'can_post'         => $canPost,
+            'latest_message'   => $latestMessage,
         ]);
+    }
+
+    /**
+     * Poll endpoint: GET /groups/{slug}/poll
+     * Returns JSON with the latest message id for the group.
+     */
+    public function poll(string $slug): void
+    {
+        $viewer = $this->auth->mustBeLoggedIn();
+        $view   = $this->groups->getGroupView($slug, $viewer);
+
+        if (!$view['group']) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Group not found']);
+            return;
+        }
+
+        // Fetch the latest message row, not just the ID
+        $latest = $this->messagesSvc->getLatestMessageForGroup($view['group']);
+
+        header('Content-Type: application/json');
+        echo json_encode(['latest_message' => $latest]);
     }
 
 }
