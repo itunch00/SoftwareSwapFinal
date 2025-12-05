@@ -1,6 +1,9 @@
 {# app/Views/groups/show.twig #}
 {% extends "layouts/base.twig" %}
-{% block title %}{{ group.name }} — UAFS Campfire{% endblock %}
+{% block title %}
+	{{ group.name }}
+	— UAFS Campfire
+{% endblock %}
 {% set me = app.user %}
 {# Controller should set:
    - channels: list of channels in group
