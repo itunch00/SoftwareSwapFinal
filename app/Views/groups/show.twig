@@ -7,6 +7,7 @@
    - selected_channel: channel object for ?c=slug (or null)
    - messages: messages for selected_channel (or [])
    - can_view, is_member, can_post
+   - latest_message: most recent message row (or null)
 #}
 
 {% block body %}
@@ -120,7 +121,9 @@
               <div class="message-card">
                 <div class="message-head">
                   <strong>{{ m.user_name }}</strong>
-                  <span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
+                  <span class="muted small">
+                    {{ m.created_at|date_modify('-6 hours')|date('M j, Y · h:i a') }}
+                  </span>
                   {% if me and me.role == 'admin' %}
                     <form method="post"
                           action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages/{{ m.id }}/delete"
@@ -213,4 +216,79 @@
     </aside>
   </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Track the last seen message id
+  var lastSeenId = {% if latest_message %}{{ latest_message.id }}{% else %}null{% endif %};
+  var pollUrl = "/groups/{{ group.slug }}/poll";
+  var chatBody = document.getElementById("messages");
+
+  // Helper: format timestamp with -6 hour offset, no seconds
+  function formatTimestamp(raw) {
+    var dt = new Date(raw);
+    dt.setHours(dt.getHours() - 6); // subtract 6 hours
+    return dt.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+      // no 'second' field → seconds omitted
+    });
+  }
+
+  setInterval(function() {
+    fetch(pollUrl, { headers: { 'Accept': 'application/json' } })
+      .then(res => res.json())
+      .then(data => {
+        // Expecting { latest_message: { id, user_name, body, created_at } }
+        if (data.latest_message && data.latest_message.id && data.latest_message.id !== lastSeenId) {
+          lastSeenId = data.latest_message.id;
+          var m = data.latest_message;
+
+          // Build new message card
+          var card = document.createElement("div");
+          card.className = "message-card";
+          card.innerHTML = `
+            <div class="message-head">
+              <strong>${m.user_name}</strong>
+              <span class="muted small">${formatTimestamp(m.created_at)}</span>
+            </div>
+            <div class="message-body">${m.body}</div>
+          `;
+
+          // Append to chat body
+          chatBody.appendChild(card);
+
+          // Auto-scroll to bottom
+          chatBody.scrollTop = chatBody.scrollHeight;
+        }
+      })
+      .catch(err => console.error("Polling error:", err));
+  }, 1000); // poll every second
+
+  // Reformat any existing server-rendered timestamps on page load
+  document.querySelectorAll(".message-head .muted.small").forEach(function(el) {
+    var raw = el.textContent.trim();
+    var dt = new Date(raw);
+    if (!isNaN(dt)) {
+      dt.setHours(dt.getHours() - 6);
+      el.textContent = dt.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric'
+      });
+    }
+  });
+});
+</script>
+
+
+
+
+
+
 {% endblock %}

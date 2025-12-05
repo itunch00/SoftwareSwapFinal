@@ -137,6 +137,11 @@ try {
         $viewer = $c->authGuard->userOrNull();
         $groupController->show($m[1], $viewer); exit;
     }
+    // GET /groups/{slug}/poll
+    if ($method === 'GET' && preg_match('#^/groups/([a-z0-9\-]+)/poll$#', $uri, $m)) {
+        $groupController->poll($m[1]); exit;
+    }
+
 
     // memberships
     if ($method === 'POST' && preg_match('#^/groups/([a-z0-9\-]+)/join$#', $uri, $m)) {
