@@ -1,0 +1,74 @@
+Generate Current Database structure dump:
+docker exec -it mariadb mariadb-dump -u root -p'0309' --all-databases > /home/nancy/uafs-cs-social/all_databases.sql
+
+Create Docker network:
+docker network create uafs-net
+
+Stop Current DB:
+systemctl stop mariadb OR systemctl stop mysql
+
+MARIADB: 
+
+Run MariaDB Container:
+docker run -d \
+  --name mariadb \
+  --network uafs-net \
+  -e MYSQL_ROOT_PASSWORD=0309 \
+  -v /home/nancy/uafs-cs-social/all_databases.sql:/docker-entrypoint-initdb.d/all_databases.sql \
+  mariadb:11.4
+
+Create User:
+docker exec -it mariadb mariadb -u root -p'0309' -e "CREATE USER 'pubuser'@'%' IDENTIFIED BY 'password';"
+
+Grant User Privelages:
+docker exec -it mariadb mariadb -u root -p'0309' -e "GRANT ALL PRIVILEGES ON \`uafs_app\`.* TO 'pubuser'@'%';"
+docker exec -it mariadb mariadb -u root -p'0309' -e "GRANT ALL PRIVILEGES ON \`uafs_cs_social\`.* TO 'pubuser'@'%';"
+docker exec -it mariadb mariadb -u root -p'0309' -e "FLUSH PRIVILEGES;"
+
+APACHE:
+Save as "Dockerfile" in desired Directory
+
+FROM php:8.2-cli
+
+RUN apt-get update && apt-get install -y \
+    unzip \
+    git \
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www/html
+
+EXPOSE 8000
+
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+
+
+To Run Apachce Container:
+
+Run:
+docker build -t uafs-php-app .
+
+And then:
+docker run -d --name php-app \
+  --network uafs-net \
+  -p 8000:80 \
+  -v /home/nancy/uafs-cs-social:/var/www/html \
+  uafs-php-app
+
+Then:
+docker inspect php-app
+Access Webserver from php-app ip listed in the inspect command :8000 (port 8000)
+
+Ensure .env file matches:
+
+APP_ENV=local
+APP_DEBUG=true
+
+DB_HOST=mariadb
+DB_PORT=3306
+DB_NAME=uafs_cs_social
+DB_USER=pubuser
+DB_PASS=password
+
+APP_KEY=5282fabee03ee368b25419d7c4e13fd5a409c001b6b1e6f30f8e6b2f171411c1 #using genarated command 

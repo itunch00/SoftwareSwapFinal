@@ -1,0 +1,5 @@
+docker run -d --name php-app \
+  --network uafs-net \
+  -p 8000:80 \
+  -v /home/nancy/uafs-cs-social:/var/www/html \
+  uafs-php-app

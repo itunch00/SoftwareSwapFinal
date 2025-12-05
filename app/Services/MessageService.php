@@ -19,14 +19,6 @@ final class MessageService
 
     /**
      * Create a message in a channel after validating access rules.
-     *
-     * @param string $groupSlug   Group slug.
-     * @param string $channelSlug Channel slug.
-     * @param string $body        Raw message body.
-     * @param array  $actor       Current user array: ['id','role','name',...].
-     * @return array              ['id' => int, 'channel' => array, 'group' => array]
-     *
-     * @throws \RuntimeException if group/channel not found, not a member, or posting not allowed.
      */
     public function createMessage(string $groupSlug, string $channelSlug, string $body, array $actor): array
     {
@@ -53,14 +45,7 @@ final class MessageService
     }
 
     /**
-     * Fetch messages for rendering a channel page, with permissions resolved elsewhere.
-     *
-     * @param array    $group     Group row.
-     * @param array    $channel   Channel row.
-     * @param int      $limit     Max rows to fetch (default 50).
-     * @param int|null $afterId   Forward paging anchor (optional).
-     * @param int|null $beforeId  Backward paging anchor (optional).
-     * @return array              List of message rows with user fields.
+     * Fetch messages for rendering a channel page.
      */
     public function getMessagesForChannel(
         array $group,
@@ -72,6 +57,9 @@ final class MessageService
         return $this->messages->listByChannel((int)$channel['id'], $limit, $afterId, $beforeId);
     }
 
+    /**
+     * Delete a message by id (admin only).
+     */
     public function deleteMessageById(int $id, array $actor): void
     {
         if (($actor['role'] ?? 'student') !== 'admin') {
@@ -80,4 +68,20 @@ final class MessageService
         $this->messages->deleteById($id);
     }
 
+    /**
+     * Return the latest message id for a group.
+     */
+    public function getLatestMessageIdForGroup(array $group): ?int
+    {
+        return $this->messages->getLatestMessageIdByGroup((int)$group['id']);
+    }
+
+    /**
+     * Return the full latest message row for a group.
+     */
+    public function getLatestMessageForGroup(array $group): ?array
+    {
+        $id = $this->messages->getLatestMessageIdByGroup((int)$group['id']);
+        return $id ? $this->messages->getById($id) : null;
+    }
 }

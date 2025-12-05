@@ -122,19 +122,52 @@ final class MessageRepository
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
-    public function getById(int $id): ?array
-    {
-        $st = $this->db->prepare("SELECT * FROM channel_messages WHERE id = :id LIMIT 1");
-        $st->bindValue(':id', $id, \PDO::PARAM_INT);
-        $st->execute();
-        $row = $st->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
-    }
+public function getById(int $id): ?array
+{
+    $sql = "
+        SELECT m.id,
+               m.channel_id,
+               m.user_id,
+               m.body,
+               m.created_at,
+               u.display_name AS user_name,
+               u.role
+        FROM channel_messages m
+        JOIN users u ON u.id = m.user_id
+        WHERE m.id = :id
+        LIMIT 1
+    ";
+
+    $st = $this->db->prepare($sql);
+    $st->bindValue(':id', $id, \PDO::PARAM_INT);
+    $st->execute();
+    $row = $st->fetch(\PDO::FETCH_ASSOC);
+
+    return $row ?: null;
+}
 
     public function deleteById(int $id): void
     {
         $st = $this->db->prepare("DELETE FROM `channel_messages` WHERE `id` = :id LIMIT 1");
         $st->bindValue(':id', $id, PDO::PARAM_INT);
         $st->execute();
+    }
+
+        public function getLatestMessageIdByGroup(int $groupId): ?int
+    {
+        $sql = "
+            SELECT m.id
+            FROM channel_messages m
+            JOIN channels c ON c.id = m.channel_id
+            WHERE c.group_id = :gid
+            ORDER BY m.id DESC
+            LIMIT 1
+        ";
+        $st = $this->db->prepare($sql);
+        $st->bindValue(':gid', $groupId, PDO::PARAM_INT);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? (int)$row['id'] : null;
     }
 }
