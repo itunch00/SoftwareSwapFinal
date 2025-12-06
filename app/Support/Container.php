@@ -146,7 +146,7 @@ final class Container
         $this->groupService      = new GroupService($groupRepo, $channelRepo, $membershipRepo);
         $this->membershipService = new MembershipService($groupRepo, $membershipRepo);
         $this->channelService    = new ChannelService($groupRepo, $channelRepo, $membershipRepo);
-        $this->messageService    = new MessageService($groupRepo, $channelRepo, $membershipRepo, $messageRepo);
+        $this->messageService    = new MessageService($groupRepo, $channelRepo, $membershipRepo, $messageRepo, $dmMsgRepo);
         $this->profileService    = new ProfileService($userRepo, $profileRepo);
         $this->dmService = new DmService($dmConvRepo, $dmMsgRepo, $userRepo);
         $this->moderationService = new ModerationService($userRepo, $channelRepo, $messageRepo, $moderationActionRepo);

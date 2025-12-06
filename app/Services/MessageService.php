@@ -5,6 +5,7 @@ namespace App\Services;
 
 use App\Repositories\GroupRepository;
 use App\Repositories\ChannelRepository;
+use App\Repositories\DmMessageRepository;
 use App\Repositories\GroupMembershipRepository;
 use App\Repositories\MessageRepository;
 
@@ -15,6 +16,8 @@ final class MessageService
         private ChannelRepository $channels,
         private GroupMembershipRepository $memberships,
         private MessageRepository $messages,
+        //added for dm messages
+        private DmMessageRepository $dmMessages
     ) {}
 
     /**
@@ -84,4 +87,15 @@ final class MessageService
         $id = $this->messages->getLatestMessageIdByGroup((int)$group['id']);
         return $id ? $this->messages->getById($id) : null;
     }
+
+    /**
+     * Return the full latest message row for a group.
+     */
+    public function getLatestMessageForConversation(array $conv): ?array
+{
+    $latestId = $this->dmMessages->getLatestMessageIdByConversation((int)$conv['id']);
+    if (!$latestId) return null;
+
+    return $this->dmMessages->getById($latestId);
+}
 }
