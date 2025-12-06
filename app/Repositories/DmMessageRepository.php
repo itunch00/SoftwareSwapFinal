@@ -129,4 +129,40 @@ final class DmMessageRepository
         $st->execute();
         return (int)$st->fetchColumn();
     }
+
+    //retrieves a message by its id
+    public function getById(int $id): ?array
+    {
+        $sql = "
+            SELECT m.*, u.display_name AS user_name
+            FROM dm_messages m
+            JOIN users u ON u.id = m.sender_id
+            WHERE m.id = :id
+            LIMIT 1
+        ";
+
+        $st = $this->db->prepare($sql);
+        $st->bindValue(':id', $id, PDO::PARAM_INT);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+    //gets lates message id for long polling
+    public function getLatestMessageIdByConversation(int $conversationId): ?int
+    {
+        $sql = "
+            SELECT id
+            FROM dm_messages
+            WHERE conversation_id = :cid
+            ORDER BY id DESC
+            LIMIT 1
+        ";
+        $st = $this->db->prepare($sql);
+        $st->bindValue(':cid', $conversationId, PDO::PARAM_INT);
+        $st->execute();
+
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int)$row['id'] : null;
+    }
 }

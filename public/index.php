@@ -50,7 +50,7 @@ try {
     $messageController = new MessageController($c->messageService, $c->authGuard);
     $notificationController = new \App\Controllers\NotificationController($c->authGuard, $c->notificationService);
     $profile = new ProfileController($c->profileService, $c->authGuard, $c->twig);
-    $dm = new DmController($c->dmService, $c->authGuard, $c->twig);
+    $dm = new DmController($c->dmService, $c->authGuard, $c->messageService, $c->twig);
     $admin = new AdminModerationController($c->moderationService, $c->authGuard, $c->groupService, $c->channelService, $c->messageService, $c->twig);
     $twig = $c->twig;
 
@@ -194,6 +194,12 @@ try {
     // GET /dms/{id}
     if ($method === 'GET' && preg_match('#^/dms/(\d+)$#', $uri, $m)) {
         $dm->show((int)$m[1]); exit;
+    }
+
+    // GET /dms/{id}/poll
+    if ($method === 'GET' && preg_match('#^/dms/([a-z0-9\-]+)/poll$#', $uri, $m)) {
+        $dm->poll((int)$m[1]);
+        exit;
     }
 
     // POST /dms/{id}/messages

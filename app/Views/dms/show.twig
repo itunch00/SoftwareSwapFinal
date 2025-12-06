@@ -139,4 +139,85 @@ form.submit();
 			white-space: pre-wrap;
 		}
 	</style>
+	{% set partnerDisplayName =
+		partner.display_name is not empty
+			? partner.display_name
+			: (partner.name is not empty ? partner.name : 'User #' ~ partner.id)
+	%}
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+
+		// Track latest message ID
+		var lastSeenId = {{ messages|last ? messages|last.id : 'null' }};
+
+		var pollUrl = "/dms/{{ conv.id }}/poll";
+		var msgList = document.querySelector(".message-list");
+
+		// Helper: timestamp formatting with -6 hour offset
+		function formatTimestamp(raw) {
+			var dt = new Date(raw);
+			dt.setHours(dt.getHours() - 6); // -6 hours
+			return dt.toLocaleString(undefined, {
+			year: 'numeric',
+			month: 'numeric',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: 'numeric'
+			// no seconds—matches group behavior
+			});
+		}
+
+		// Polling loop (every 1 second)
+		setInterval(function() {
+			fetch(pollUrl, { headers: { "Accept": "application/json" }})
+			.then(res => res.json())
+			.then(data => {
+				if (!data.latest_message) return;
+
+				var m = data.latest_message;
+
+				if (!lastSeenId || m.id > lastSeenId) {
+				lastSeenId = m.id;
+
+				var mine = (m.sender_id == {{ me.id }});
+
+				// Build DOM node
+				var li = document.createElement("li");
+				li.id = "msg-" + m.id;
+				li.className = "message " + (mine ? "mine" : "theirs");
+
+				li.innerHTML = `
+					<div class="message-head">
+					<strong>${mine ? "You" : "{{ partnerDisplayName|e }}"}</strong>
+					<span class="muted small">${formatTimestamp(m.created_at)}</span>
+					</div>
+					<div class="message-body">${m.body}</div>
+				`;
+
+				msgList.appendChild(li);
+
+				// Scroll to bottom
+				msgList.scrollTop = msgList.scrollHeight;
+				}
+			})
+			.catch(err => console.error("DM Poll Error:", err));
+		}, 1000);
+
+		// Reformat EXISTING timestamps (server-rendered)
+		document.querySelectorAll(".message .message-head .muted.small").forEach(function(el) {
+			var raw = el.textContent.trim();
+			var dt = new Date(raw);
+			if (!isNaN(dt)) {
+			dt.setHours(dt.getHours() - 6);
+			el.textContent = dt.toLocaleString(undefined, {
+				year: 'numeric',
+				month: 'numeric',
+				day: 'numeric',
+				hour: 'numeric',
+				minute: 'numeric'
+			});
+			}
+		});
+		});
+	</script>
 {% endblock %}
