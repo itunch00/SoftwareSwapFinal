@@ -3,42 +3,107 @@
 
 {% block body %}
 <div class="page-wrap">
-  <div class="page-card">
-    <h1>{{ user.display_name ?? user.username }}</h1>
+  <div class="page-card" style="padding: 2rem;">
+
+    <!-- Profile Header -->
+    <h1 style="
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    ">
+      {{ user.display_name ?? user.username }}
+    </h1>
 
     {% if profile %}
-      {% if profile.bio %}
-        <p><strong>Bio:</strong> {{ profile.bio }}</p>
-      {% endif %}
+      <!-- Profile Sections Container -->
+      <div style="display: grid; gap: 1rem;">
 
-      {% if profile.website %}
-        <p><strong>Website:</strong>
-           <a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a>
-        </p>
-      {% endif %}
+        <!-- Bio -->
+        <div class="profile-section" style="
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--card-bg, #f7f7f7);
+            border: 1px solid var(--border-color, #ddd);
+        ">
+          <h3 style="margin-bottom: 0.5rem;">Biography:</h3>
+          <p>{{ profile.bio ?: 'User did not provide' }}</p>
+        </div>
 
-      {% if profile.github %}
-        <p><strong>GitHub:</strong>
-           <a href="{{ profile.github }}" target="_blank">{{ profile.github }}</a>
-        </p>
-      {% endif %}
+        <!-- Pronouns -->
+        <div class="profile-section" style="
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--card-bg, #f7f7f7);
+            border: 1px solid var(--border-color, #ddd);
+        ">
+          <h3 style="margin-bottom: 0.5rem;">Pronouns:</h3>
+          <p>{{ profile.pronouns ?: 'User did not provide' }}</p>
+        </div>
 
-      {% if profile.linkedin %}
-        <p><strong>LinkedIn:</strong>
-           <a href="{{ profile.linkedin }}" target="_blank">{{ profile.linkedin }}</a>
-        </p>
-      {% endif %}
+                <!-- Timezone -->
+        <div class="profile-section" style="
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--card-bg, #f7f7f7);
+            border: 1px solid var(--border-color, #ddd);
+        ">
+          <h3 style="margin-bottom: 0.5rem;">Timezone:</h3>
+          <p>{{ profile.timezone ?: 'User did not provide' }}</p>
+        </div>
 
-      {% if profile.pronouns %}
-        <p><strong>Pronouns:</strong> {{ profile.pronouns }}</p>
-      {% endif %}
+        <!-- Website -->
+        <div class="profile-section" style="
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--card-bg, #f7f7f7);
+            border: 1px solid var(--border-color, #ddd);
+        ">
+          <h3 style="margin-bottom: 0.5rem;">User's Website:</h3>
+          {% if profile.website %}
+            <p><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></p>
+          {% else %}
+            <p>User did not provide</p>
+          {% endif %}
+        </div>
 
-      {% if profile.timezone %}
-        <p><strong>Timezone:</strong> {{ profile.timezone }}</p>
-      {% endif %}
+        <!-- GitHub -->
+        <div class="profile-section" style="
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--card-bg, #f7f7f7);
+            border: 1px solid var(--border-color, #ddd);
+        ">
+          <h3 style="margin-bottom: 0.5rem;">GitHub:</h3>
+          {% if profile.github %}
+            <p><a href="{{ profile.github }}" target="_blank">{{ profile.github }}</a></p>
+          {% else %}
+            <p>User did not provide</p>
+          {% endif %}
+        </div>
+
+        <!-- LinkedIn -->
+        <div class="profile-section" style="
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--card-bg, #f7f7f7);
+            border: 1px solid var(--border-color, #ddd);
+        ">
+          <h3 style="margin-bottom: 0.5rem;">LinkedIn:</h3>
+          {% if profile.linkedin %}
+            <p><a href="{{ profile.linkedin }}" target="_blank">{{ profile.linkedin }}</a></p>
+          {% else %}
+            <p>User did not provide</p>
+          {% endif %}
+        </div>
+
+      </div>
     {% else %}
-      <p class="muted">This user has not created a profile yet.</p>
+      <p class="muted" style="text-align: center; margin-top: 2rem;">
+        This user has not created a profile yet.
+      </p>
     {% endif %}
+
   </div>
 </div>
 {% endblock %}
