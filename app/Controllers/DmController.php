@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\DmService;
+use App\Services\MessageService;
 use App\Middleware\AuthGuard;
 use App\Support\Csrf;
 use Twig\Environment;
@@ -13,6 +14,7 @@ final class DmController
     public function __construct(
         private DmService $svc,
         private AuthGuard $auth,
+        private MessageService $messagesSvc,
         private Environment $twig
     ) {}
 
@@ -106,5 +108,30 @@ final class DmController
         } catch (\Throwable $e) {
             header('Location: /dms/' . $convId); exit;
         }
+    }
+
+     /**
+     * Poll endpoint: GET /dms/{id}/poll
+     * Returns JSON with latest message in the conversation.
+     */
+    public function poll(int $convId): void
+    {
+        $viewer = $this->auth->mustBeLoggedIn();
+        $viewerId = (int)$viewer['id'];
+
+        // Make sure conversation belongs to user
+        try {
+            [$conv] = $this->svc->getThread($convId, $viewerId, 1, 1);
+        } catch (\Throwable $e) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Conversation not found']);
+            return;
+        }
+
+        // Get latest DM
+        $latest = $this->messagesSvc->getLatestMessageForConversation($conv);
+
+        header('Content-Type: application/json');
+        echo json_encode(['latest_message' => $latest]);
     }
 }

@@ -55,6 +55,9 @@ mysql -u uafs_app -p uafs_cs_social < database/migrations/006_create_user_profil
 mysql -u uafs_app -p uafs_cs_social < database/migrations/007_create_dm_conversations.sql
 mysql -u uafs_app -p uafs_cs_social < database/migrations/008_create_dm_messages.sql
 mysql -u uafs_app -p uafs_cs_social < database/migrations/009_create_moderation_actions.sql
-#### New from Swap (I had more luck doing: mariadb -u root -p uafs_cs_social < path/to/sql/file
+#### New from Swap (I had more luck doing: mariadb -u root -p uafs_cs_social < path/to/sql/file)
 mysql -u uafs_app -p uafs_cs_social < database/migrations/010_create_notifications.sql
 mysql -u uafs_app -p uafs_cs_social < database/migrations/011_create_notification_assignments.sql
+
+### Step6: Containerization
+Follow the steps in /app/dockertut.txt to set up docker environment (make sure that docker is installed)
