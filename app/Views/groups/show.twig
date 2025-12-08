@@ -1,17 +1,13 @@
 {# app/Views/groups/show.twig #}
 {% extends "layouts/base.twig" %}
 {% block title %}
-	{{ group.name }}
-	— UAFS Campfire
+  {% if selected_channel %}
+    #{{ selected_channel.name }} — {{ group.name }} — UAFS Campfire
+  {% else %}
+    {{ group.name }} — UAFS Campfire
+  {% endif %}
 {% endblock %}
 {% set me = app.user %}
-{# Controller should set:
-   - channels: list of channels in group
-   - selected_channel: channel object for ?c=slug (or null)
-   - messages: messages for selected_channel (or [])
-   - can_view, is_member, can_post
-   - latest_message: most recent message row (or null)
-#}
 
 {% block body %}
 	<div
@@ -108,52 +104,68 @@
 			<main class="hub-center">
 				<section class="chat-wrapper">
 
-					<header class="chat-header">
-						<div class="chat-title">
-							<h1 class="mb-0">
-								{% if selected_channel %}#{{ selected_channel.name }}{% else %}Select a channel
-								{% endif %}
-							</h1>
-						</div>
-						{% if selected_channel %}
-							<div class="channel-tags">
-								<span class="badge subtle">{{ selected_channel.kind|title }}</span>
-								{% if selected_channel.is_readonly %}
-									<span class="badge subtle">Readonly</span>
-								{% endif %}
-							</div>
-						{% endif %}
-					</header>
+        <header class="chat-header">
+          <div class="chat-title">
+            {% if selected_channel %}
+              <a href="/groups/{{ group.slug }}" class="back-link">&larr; {{ group.name }}</a>
+              <h1 class="mb-0">#{{ selected_channel.name }}</h1>
+            {% else %}
+              <h1 class="mb-0">Select a channel</h1>
+            {% endif %}
+          </div>
+          {% if selected_channel %}
+            <div class="channel-tags">
+              <span class="badge subtle">{{ selected_channel.kind|title }}</span>
+              {% if selected_channel.is_readonly %}
+                <span class="badge subtle">Readonly</span>
+              {% endif %}
+            </div>
+            {% if me and me.role == 'admin' %}
+              <form method="post" action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/delete" class="delete-form">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <input name="reason" type="text" placeholder="Reason (optional)" class="input small">
+                <button class="btn danger small" type="submit">Delete Channel</button>
+              </form>
+            {% endif %}
+          {% endif %}
+        </header>
 
-					<div class="chat-body" id="messages">
-						{% if selected_channel and messages and messages|length > 0 %}
-							{% for m in messages %}
-								<div class="message-card">
-									<div class="message-head">
-										<strong>
-											<a href="/profile/{{ m.user_id }}" class="user-link">
-												{{ m.user_name }}
-											</a>
-										</strong>
-										<span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
-										{% if me and me.role == 'admin' %}
-											<form method="post" action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages/{{ m.id }}/delete" style="display:inline;">
-												<input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-												<button class="btn danger tiny" type="submit" title="Delete message">🗑️</button>
-											</form>
-										{% endif %}
-									</div>
-									<div class="message-body">{{ m.body }}</div>
-								</div>
-							{% endfor %}
-						{% elseif selected_channel %}
-							<p class="muted empty-chat">No messages yet in #{{ selected_channel.name }}.</p>
-						{% else %}
-							<div class="placeholder">
-								<p class="muted">Pick a channel on the left to view messages.</p>
-							</div>
-						{% endif %}
-					</div>
+        {# Flash messages inside chat box #}
+        {% set f = flash() %}
+        {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+        {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
+
+        <div class="chat-body" id="messages">
+          {% if selected_channel and messages and messages|length > 0 %}
+            {% for m in messages %}
+              <div class="message-card">
+                <div class="message-head">
+                  <strong>
+                    <a href="/profile/{{ m.user_id }}" class="user-link">{{ m.user_name }}</a>
+                  </strong>
+                  <span class="muted small">
+                    {{ m.created_at|date_modify('-6 hours')|date('M j, Y · h:i a') }}
+                  </span>
+                  {% if me and me.role == 'admin' %}
+                    <form method="post"
+                          action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages/{{ m.id }}/delete"
+                          style="display:inline;">
+                      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                      <button class="btn danger tiny" type="submit" title="Delete message">🗑️</button>
+                    </form>
+                  {% endif %}
+                </div>
+                <div class="message-body">{{ m.body }}</div>
+              </div>
+            {% endfor %}
+          {% elseif selected_channel %}
+            <p class="muted empty-chat">No messages yet in #{{ selected_channel.name }}.</p>
+          {% else %}
+            <div class="placeholder">
+              <p class="muted">Pick a channel on the left to view messages.</p>
+            </div>
+          {% endif %}
+        </div>
 
 					<div class="chat-footer">
 						{% if selected_channel and can_post %}
@@ -170,37 +182,22 @@
 				</section>
 			</main>
 
-			{# RIGHT: Channel info (top) + Create Channel (bottom) #}
-			<aside class="hub-right">
-				<div class="right-card">
-					<div class="list-head">Channel Info</div>
-					{% if selected_channel %}
-						{% if me and (me.role == 'admin') %}
-							<form method="post" action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/delete" onsubmit="return confirm('Delete channel #{{ selected_channel.name }}?');" style="margin-top:.5rem">
-								<input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-								<button class="btn danger small" type="submit">Delete this channel</button>
-							</form>
-						{% endif %}
-						<div class="info-grid">
-							<div>
-								<span class="muted small">Name</span>
-								<div>#{{ selected_channel.name }}</div>
-							</div>
-							<div>
-								<span class="muted small">Kind</span>
-								<div>{{ selected_channel.kind|title }}</div>
-							</div>
-							{% if selected_channel.description %}
-								<div>
-									<span class="muted small">About</span>
-									<div>{{ selected_channel.description }}</div>
-								</div>
-							{% endif %}
-						</div>
-					{% else %}
-						<p class="muted small">Select a channel to see details.</p>
-					{% endif %}
-				</div>
+    {# RIGHT: Channel info + Create Channel #}
+    <aside class="hub-right">
+      <div class="right-card">
+        <div class="list-head">Channel Info</div>
+        {% if selected_channel %}
+          <div class="info-grid">
+            <div><span class="muted small">Name</span><div>#{{ selected_channel.name }}</div></div>
+            <div><span class="muted small">Kind</span><div>{{ selected_channel.kind|title }}</div></div>
+            {% if selected_channel.description %}
+              <div><span class="muted small">About</span><div>{{ selected_channel.description }}</div></div>
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="muted small">Select a channel to see details.</p>
+        {% endif %}
+      </div>
 
 				{% if can_view and me and (me.role == 'admin' or (is_member and me.role == 'faculty')) %}
 					<div class="right-card">
@@ -270,11 +267,13 @@ document.addEventListener("DOMContentLoaded", function() {
           card.className = "message-card";
           card.innerHTML = `
             <div class="message-head">
-              <strong>${m.user_name}</strong>
+              <strong>
+              <a href="/profile/${m.user_id}" class="user-link">${m.user_name}</a>
+              </strong>
               <span class="muted small">${formatTimestamp(m.created_at)}</span>
-            </div>
-            <div class="message-body">${m.body}</div>
-          `;
+              </div>
+              <div class="message-body">${m.body}</div>
+            `;
 
           // Append to chat body
           chatBody.appendChild(card);
