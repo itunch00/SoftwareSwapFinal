@@ -80,6 +80,7 @@ a:hover{text-decoration:underline}
   gap:24px;
   align-items:center;
   background: rgba(255,0,0,0.1);
+  background: rgba(255,0,0,0.1);
 }
 .page-card{
   width:100%;
@@ -856,4 +857,77 @@ body.nav-open{overflow:hidden}
     right: 50px; /* slightly left of the hamburger */
     z-index: 60; /* above other elements */
   }
+}
+  /* Make select match text inputs */
+.textbox-style,
+.auth-form select {
+  appearance: none;        /* Remove default browser styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: white; /* Match input background */
+  border: 1px solid #ccc;  /* Match input border */
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;      /* Match input radius */
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Optional: Add a custom dropdown arrow */
+.auth-form select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='gray' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'><path d='M5.5 7l4.5 5 4.5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  padding-right: 2rem; /* Make room for the arrow */
+}
+/* Modal overlay */
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 9998;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  animation: popIn .15s ease-out;
+  z-index: 9999;   /* ← IMPORTANT */
+  position: relative; /* ← REQUIRED */
+}
+
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* Smooth animation */
+@keyframes popIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
