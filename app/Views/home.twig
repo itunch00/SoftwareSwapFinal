@@ -14,13 +14,9 @@
   {% endfor %}
 
   {# Welcome #}
-  <section class="page-card" style="text-align:center;">
-    <h1>Welcome, {{ user.name }}!</h1>
-    <p class="muted">Role: {{ user.role|title }}</p>
-    <form method="post" action="/logout" class="form-inline" style="margin-top:1rem;">
-      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-      <button class="btn secondary" type="submit">Logout</button>
-    </form>
+  <section style="text-align:center; color:white;">
+  <h1>Welcome, {{ user.name }}!</h1>
+  <p>Role: {{ user.role|title }}</p>
   </section>
 
   {% if admin_groups is defined %}
@@ -96,6 +92,7 @@
     {# ================= Member: Your Groups ================= #}
     <section class="page-card" id="your-groups">
       <h2>Your Groups</h2>
+
       {% if your_groups and your_groups|length > 0 %}
         <div class="group-grid">
           {% for g in your_groups %}
@@ -104,9 +101,11 @@
                 <a href="/groups/{{ g.slug }}" class="group-name">{{ g.name }}</a>
                 <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
               </div>
+
               {% if g.description %}
                 <p class="group-desc">{{ g.description }}</p>
               {% endif %}
+
               {% if g.member_count is defined %}
                 <div class="small muted" style="margin-top:0.5rem;">
                   👥 {{ g.member_count }} members
@@ -115,8 +114,23 @@
             </div>
           {% endfor %}
         </div>
+
+        {# Button under the group grid #}
+        <div style="margin-top:1rem;text-align:center;">
+          <button class="btn primary" id="open-create-modal">+ Create Group</button>
+        </div>
+
       {% else %}
-        <p class="muted">You’re not part of any groups yet. Create one below to get started.</p>
+
+        <p class="muted">
+          You’re not part of any groups yet. Create one below to get started.
+        </p>
+
+        {# Button under the empty message #}
+        <div style="margin-top:1rem;text-align:center;">
+          <button class="btn primary" id="open-create-modal">+ Create Group</button>
+        </div>
+
       {% endif %}
     </section>
 
@@ -147,39 +161,64 @@
     </section>
   {% endif %}
 
-  {# ================= Create Group ================= #}
-  <section class="page-card" id="new-group">
-    <h2>Create a Group</h2>
+  {# ================= Create Group Modal ================= #}
+  <div id="create-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <header class="modal-header">
+        <h2>Create a Group</h2>
+        <button class="close-modal" id="close-create-modal">&times;</button>
+      </header>
 
-    <form method="POST" action="/groups" class="auth-form" novalidate>
-      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <form method="POST" action="/groups" class="auth-form" novalidate>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
 
-      <div class="field">
-        <label for="g-name">Name</label>
-        <input id="g-name"
-               name="name"
-               required
-               placeholder="e.g., CS Seniors 2025" />
-      </div>
+        <div class="field">
+          <label for="g-name">Name</label>
+          <input id="g-name"
+                name="name"
+                required
+                placeholder="e.g., CS Seniors 2025" />
+        </div>
 
-      <div class="field">
-        <label for="g-desc">Description <span class="muted">(optional)</span></label>
-        <input id="g-desc"
-               name="description"
-               placeholder="Short description" />
-      </div>
+        <div class="field">
+          <label for="g-desc">Description <span class="muted">(optional)</span></label>
+          <input id="g-desc"
+                name="description"
+                placeholder="Short description" />
+        </div>
 
-      <div class="field">
-        <label for="g-vis">Visibility</label>
-        <select id="g-vis" name="visibility" required>
-          <option value="public" selected>public</option>
-          <option value="private">private</option>
-        </select>
-      </div>
+        <div class="field">
+          <label for="g-vis">Visibility</label>
+          <select id="g-vis" name="visibility" required class="textbox-style">
+            <option value="public" selected>public</option>
+            <option value="private">private</option>
+          </select>
+        </div>
 
-      <button class="btn primary" type="submit">Create Group</button>
-    </form>
-  </section>
+        <button class="btn primary" type="submit">Create Group</button>
+      </form>
+    </div>
+  </div>
+
+
 
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const openBtn = document.getElementById("open-create-modal");
+  const closeBtn = document.getElementById("close-create-modal");
+  const modal = document.getElementById("create-modal");
+
+  if (openBtn) openBtn.onclick = () => modal.classList.remove("hidden");
+  if (closeBtn) closeBtn.onclick = () => modal.classList.add("hidden");
+
+  window.onclick = (e) => {
+    if (e.target === modal) modal.classList.add("hidden");
+  };
+
+});
+</script>
+
+
 {% endblock %}
