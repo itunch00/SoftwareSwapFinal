@@ -3,60 +3,217 @@
 
 {% block body %}
 <div class="page-wrap">
-  <div class="page-card">
-    <div class="breadcrumb">
+  <div class="page-card messages-page">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
       <a href="/home">Home</a> &raquo; <span>Messages</span>
+    </nav>
+
+    <!-- Page header -->
+    <header class="page-header">
+      <h1>Messages</h1>
+    </header>
+
+    <!-- Flash messages -->
+    {% set f = flash() %}
+    <div class="flash-messages">
+      {% for msg in f.success ?? [] %}
+        <div class="alert alert-success">{{ msg }}</div>
+      {% endfor %}
+      {% for msg in f.error ?? [] %}
+        <div class="alert alert-error">{{ msg }}</div>
+      {% endfor %}
     </div>
 
-    <h1>Messages</h1>
-
-    {% set f = flash() %}
-    {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
-    {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
-
-    <section style="margin-bottom:1rem;">
-      <h3>Start a new message</h3>
+    <!-- New message form -->
+    <section class="new-message">
+      <h2>Start a New Message</h2>
       <form method="post" action="/dms/start" class="form-inline">
         <input type="hidden" name="_csrf" value="{{ csrf_token }}">
-        <label class="sr-only" for="email">User email</label>
-        <input id="email" name="email" type="email" placeholder="name@school.edu" required style="min-width:260px;">
+        <input id="email" name="email" type="email" placeholder="name@school.edu" required>
         <button class="btn primary" type="submit">Message</button>
       </form>
-      {# <p class="muted small" style="margin-top:.25rem;">
-        Tip: you can also open directly via <code>/dms/new?user_id=&lt;id&gt;</code>
-      </p> #}
     </section>
 
-    <h3>Recent conversations</h3>
-    {% if conversations and conversations|length > 0 %}
-      <ul class="channel-list">
-        {% for c in conversations %}
-          <li>
-            <div>
-              <div class="channel-name">
-                <a href="/dms/{{ c.id }}">
+    <!-- Recent conversations -->
+    <section class="recent-conversations">
+      <h2>Recent Conversations</h2>
+
+      {% if conversations and conversations|length > 0 %}
+        <ul class="conversation-list">
+          {% for c in conversations %}
+            <li class="conversation-item">
+              <div class="conversation-info">
+                <a class="conversation-name" href="/dms/{{ c.id }}">
                   {{ c.partner_name ?? ('User #' ~ c.partner_id) }}
                 </a>
-                <span class="muted small"> — {{ c.partner_email }}</span>
+                <span class="conversation-email">{{ c.partner_email }}</span>
+
+                {% if c.last_body %}
+                  <p class="conversation-preview" title="{{ c.last_at }}">
+                    {{ c.last_body|slice(0,80) ~ (c.last_body|length > 80 ? '…' : '') }}
+                  </p>
+                  <span class="conversation-time">{{ c.last_at|date('M j, Y · h:i a') }}</span>
+                {% else %}
+                  <p class="conversation-preview muted">No messages yet.</p>
+                {% endif %}
               </div>
 
-              {% if c.last_body %}
-                <div class="muted small" title="{{ c.last_at }}">
-                  <em>{{ c.last_body|slice(0,80) ~ (c.last_body|length > 80 ? '…' : '') }}</em>
-                  <span class="muted small"> . {{ c.last_at|date('M j, Y · h:i a') }}</span>
-                </div>
-              {% else %}
-                <div class="muted small">No messages yet.</div>
-              {% endif %}
-            </div>
+              <a class="btn secondary open-btn" href="/dms/{{ c.id }}">Open</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">You have no conversations yet.</p>
+      {% endif %}
+    </section>
 
-            <a class="btn secondary" href="/dms/{{ c.id }}">Open</a>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="muted">No conversations yet.</p>
-    {% endif %}
   </div>
 </div>
+
+<style>
+/* Page Wrap */
+.page-wrap {
+  width: 100%;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  gap: 2rem;
+}
+
+/* Messages card */
+.page-card.messages-page {
+  width: 100%;
+  max-width: 800px;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+.breadcrumb a {
+  text-decoration: none;
+  color: #2563eb;
+}
+.breadcrumb span {
+  color: #999;
+}
+
+/* Page header */
+.page-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #111;
+}
+
+/* Flash messages */
+.flash-messages .alert {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+.flash-messages .alert-success { background: #dcfce7; color: #166534; }
+.flash-messages .alert-error { background: #fee2e2; color: #991b1b; }
+
+/* New message form */
+.new-message h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.new-message form {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.new-message input[type="email"] {
+  flex: 1 1 260px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+.new-message .btn.primary {
+  padding: 0.6rem 1.2rem;
+}
+
+/* Recent conversations */
+.recent-conversations h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.conversation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.conversation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  background: #f9fafb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.conversation-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.conversation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.conversation-name {
+  font-weight: 600;
+  color: #111;
+  text-decoration: none;
+}
+.conversation-email {
+  font-size: 0.85rem;
+  color: #555;
+}
+.conversation-preview {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0.2rem 0;
+}
+.conversation-time {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+/* Buttons inside conversation */
+.open-btn {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* Small utility classes */
+.muted {
+  color: #777;
+  font-style: italic;
+}
+</style>
 {% endblock %}

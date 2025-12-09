@@ -72,16 +72,20 @@ a:hover{text-decoration:underline}
 @media (max-width:768px){.stack>*+*{margin-top:var(--space-2)}}
 
 /* Page shell (non-chat) */
-.page-wrap{
-  min-height:100vh;
-  padding:48px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:24px;
-  align-items:center;
-  background: rgba(255,0,0,0.1);
-  background: rgba(255,0,0,0.1);
+.page-wrap {
+  width: 100%;
+  flex: 1 0 auto;          /* key: allow it to grow to fill remaining space */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 48px 16px;
+
+  align-items: center;    /* fix horizontal stretching */
+  box-sizing: border-box;
 }
+
+
+
 .page-card{
   width:100%;
   max-width:1100px;
@@ -739,56 +743,7 @@ body.nav-open{overflow:hidden}
   background-size: 1rem;
   padding-right: 2rem; /* Make room for the arrow */
 }
-/* Modal overlay */
 
-.modal-overlay.hidden {
-  display: none;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 9998;
-}
-
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
-  animation: popIn .15s ease-out;
-  z-index: 9999;   /* ← IMPORTANT */
-  position: relative; /* ← REQUIRED */
-}
-
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.close-modal {
-  background: none;
-  border: none;
-  font-size: 1.75rem;
-  cursor: pointer;
-  line-height: 1;
-}
-
-/* Smooth animation */
-@keyframes popIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
-}
   /* Notifications */
   .notif-badge {
   background: red;
@@ -881,53 +836,106 @@ body.nav-open{overflow:hidden}
   background-size: 1rem;
   padding-right: 2rem; /* Make room for the arrow */
 }
-/* Modal overlay */
+/* ===========================
+   UAFS Modal — Fully Isolated
+   =========================== */
 
-.modal-overlay.hidden {
-  display: none;
+:root {
+  --uafs-bg: white;
+  --uafs-text: #111;
+  --uafs-overlay: rgba(0, 0, 0, 0.65);
+  --uafs-radius: 12px;
+  --uafs-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 9998;
+/* Overlay: fixed fullscreen */
+#uafs-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: var(--uafs-overlay) !important;
+  display: flex ;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
 }
 
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
-  animation: popIn .15s ease-out;
-  z-index: 9999;   /* ← IMPORTANT */
-  position: relative; /* ← REQUIRED */
+/* Hidden state */
+.uafs-hidden {
+  display: none !important;
 }
 
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+/* Modal box */
+#uafs-modal {
+  background: var(--uafs-bg) !important;
+  color: var(--uafs-text) !important;
+  border-radius: var(--uafs-radius) !important;
+  padding: 1.5rem !important;
+  width: 100% !important;
+  max-width: 420px !important;
+  box-shadow: var(--uafs-shadow) !important;
+  font-family: inherit !important;
+  position: relative !important;
 }
 
-.close-modal {
-  background: none;
-  border: none;
-  font-size: 1.75rem;
-  cursor: pointer;
-  line-height: 1;
+/* Header */
+#uafs-modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 1rem !important;
 }
 
-/* Smooth animation */
+/* Close button */
+#uafs-close-modal {
+  background: none !important;
+  border: none !important;
+  font-size: 1.8rem !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+}
+
+/* Fields */
+.uafs-field {
+  margin-bottom: 1rem !important;
+}
+
+.uafs-field label {
+  display: block !important;
+  margin-bottom: 0.3rem !important;
+  font-size: 0.9rem !important;
+}
+
+.uafs-field input,
+.uafs-field select {
+  width: 100% !important;
+  padding: 0.6rem !important;
+  border-radius: 6px !important;
+  border: 1px solid #bbb !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Button */
+.uafs-btn {
+  width: 100% !important;
+  padding: 0.8rem !important;
+  background: #2563eb !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+/* Muted text */
+.uafs-muted {
+  opacity: 0.65 !important;
+}
+
+/* Animation */
 @keyframes popIn {
   from { transform: scale(0.95); opacity: 0; }
   to   { transform: scale(1); opacity: 1; }
 }
+
