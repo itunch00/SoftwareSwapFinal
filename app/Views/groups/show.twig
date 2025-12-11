@@ -1,4 +1,3 @@
-{# app/Views/groups/show.twig #}
 {% extends "layouts/base.twig" %}
 {% block title %}
   {% if selected_channel %}
@@ -7,94 +6,148 @@
     {{ group.name }} — UAFS Campfire
   {% endif %}
 {% endblock %}
+
 {% set me = app.user %}
 
 {% block body %}
 <div class="page-wrap group-hub">
 
-  {# Flash messages (global) #}
-  {% set f = flash() %}
-  {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
-  {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
+  <div class="hub-container">
 
-  <div class="hub-grid">
+    {# ================= LEFT SIDEBAR ================= #}
+    <aside class="hub-sidebar">
 
-    {# LEFT: Group info + channels list #}
-    <aside class="hub-left">
-      <div class="left-card">
-        <div class="breadcrumb small muted">
-          <a href="/home">Home</a> &raquo; <span>{{ group.name }}</span>
+      
+
+      <div class="sidebar-content">
+
+        {# Accordion: Group Info #}
+        <div class="accordion-card">
+          <button class="accordion-toggle">Group Info</button>
+          <div class="accordion-content">
+            <div class="breadcrumb small muted">
+              <a href="/home">Home</a> &raquo; <span>{{ group.name }}</span>
+            </div>
+
+            <header class="left-header">
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
+                {% if me and me.role == 'admin' %}
+                  <form method="post" action="/groups/{{ group.slug }}/delete"
+                        onsubmit="return confirm('Delete the entire group \"{{ group.name }}\"?');">
+                    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                    <button class="btn danger small" type="submit">Delete</button>
+                  </form>
+                {% endif %}
+              </div>
+            </header>
+
+            {% if group.description %}
+              <p class="muted small">{{ group.description }}</p>
+            {% endif %}
+
+            {% if me and me.role != 'admin' %}
+              <div class="stack" style="margin-top:.5rem">
+                {% if is_member %}
+                  <form method="post" action="/groups/{{ group.slug }}/leave">
+                    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                    <button class="btn secondary small" type="submit">Leave group</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="/groups/{{ group.slug }}/join">
+                    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                    <button class="btn primary small" type="submit">Join group</button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
         </div>
 
-        <header class="left-header">
-          <h2 class="hub-title">{{ group.name }}</h2>
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <span class="badge {{ group.visibility }}">{{ group.visibility|title }}</span>
-
-            {% if me and me.role == 'admin' %}
-              <form method="post"
-                    action="/groups/{{ group.slug }}/delete"
-                    onsubmit="return confirm('Delete the entire group \"{{ group.name }}\"? This cannot be undone.');">
-                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                <button class="btn danger small" type="submit" title="Delete group">Delete group</button>
-              </form>
-            {% endif %}
-          </div>
-        </header>
-
-        {% if group.description %}<p class="muted small">{{ group.description }}</p>{% endif %}
-
-        {% if me and me.role != 'admin' %}
-          <div class="stack" style="margin-top:.5rem">
-            {% if is_member %}
-              <form method="post" action="/groups/{{ group.slug }}/leave">
-                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                <button class="btn secondary small" type="submit">Leave group</button>
-              </form>
+        {# Accordion: Channels List #}
+        <div class="accordion-card">
+          <button class="accordion-toggle">Channels</button>
+          <div class="accordion-content">
+            {% if can_view %}
+              {% if channels %}
+                <ul class="channel-list">
+                  {% for ch in channels %}
+                    <li>
+                      <a class="channel-link {% if selected_channel and selected_channel.slug == ch.slug %}active{% endif %}"
+                         href="/groups/{{ group.slug }}?c={{ ch.slug }}">
+                        #{{ ch.name }}
+                      </a>
+                      {% if me and me.role == 'admin' %}
+                        <form method="post" action="/groups/{{ group.slug }}/channels/{{ ch.slug }}/delete"
+                              onsubmit="return confirm('Delete channel #{{ ch.name }}?');">
+                          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                          <button class="btn danger tiny" type="submit">🗑️</button>
+                        </form>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="muted small">No channels yet.</p>
+              {% endif %}
             {% else %}
-              <form method="post" action="/groups/{{ group.slug }}/join">
-                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                <button class="btn primary small" type="submit">Join group</button>
-              </form>
+              <p class="muted small">Join this {{ group.visibility }} group to view channels.</p>
             {% endif %}
           </div>
+        </div>
+
+        {# Accordion: Channel Info #}
+        {% if selected_channel %}
+          <div class="accordion-card">
+            <button class="accordion-toggle">Channel Info</button>
+            <div class="accordion-content">
+              <div class="info-grid">
+                <div><span class="muted small">Name</span><div>#{{ selected_channel.name }}</div></div>
+                <div><span class="muted small">Kind</span><div>{{ selected_channel.kind|title }}</div></div>
+                {% if selected_channel.description %}
+                  <div><span class="muted small">About</span><div>{{ selected_channel.description }}</div></div>
+                {% endif %}
+              </div>
+              {% if me and (me.role == 'admin' or (is_member and me.role == 'faculty')) %}
+                <form method="POST" action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/delete" class="mt-1">
+                  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                  <input type="text" name="reason" placeholder="Reason (optional)" class="input small">
+                  <button class="btn danger small" type="submit">Delete Channel</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
         {% endif %}
+
+        {# Accordion: Create Channel #}
+        {% if can_view and me and (me.role == 'admin' or (is_member and me.role == 'faculty')) %}
+          <div class="accordion-card">
+            <button class="accordion-toggle">Create Channel</button>
+            <div class="accordion-content">
+              <form method="POST" action="/groups/{{ group.slug }}/channels" class="auth-form" novalidate>
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <div class="field">
+                  <label for="ch-name">Name</label>
+                  <input id="ch-name" name="name" required placeholder="e.g., announcements, general"/>
+                </div>
+                <div class="field">
+                  <label for="ch-desc">Description <span class="muted">(optional)</span></label>
+                  <input id="ch-desc" name="description" placeholder="Short description"/>
+                </div>
+                <div class="field field-inline">
+                  <input type="checkbox" id="ch-readonly" name="is_readonly" value="1">
+                  <label for="ch-readonly">Read-only <span class="muted">(good for announcements)</span></label>
+                </div>
+                <button class="btn primary" type="submit">Create Channel</button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
+
       </div>
-
-      <nav class="left-card">
-        <div class="list-head">Channels</div>
-        {% if can_view %}
-          {% if channels %}
-            <ul class="channel-list">
-              {% for ch in channels %}
-                <li style="display:flex;align-items:center;gap:.5rem">
-                  <a class="channel-link {% if selected_channel and selected_channel.slug == ch.slug %}active{% endif %}"
-                    href="/groups/{{ group.slug }}?c={{ ch.slug }}"
-                    style="flex:1">
-                    <span>#{{ ch.name }}</span>
-                  </a>
-
-                  {% if me and (me.role == 'admin') %}
-                    <form method="post"
-                          action="/groups/{{ group.slug }}/channels/{{ ch.slug }}/delete"
-                          onsubmit="return confirm('Delete channel #{{ ch.name }}? Messages in this channel will be removed.');">
-                      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                      <button class="btn danger small" type="submit" title="Delete channel">🗑️</button>
-                    </form>
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          {% else %}
-            <p class="muted small">No channels yet.</p>
-          {% endif %}
-        {% else %}
-          <p class="muted small">Join this {{ group.visibility }} group to view channels.</p>
-        {% endif %}
-      </nav>
     </aside>
 
-    {# CENTER: Messages of selected channel #}
+    {# ================= CENTER: Chat Area ================= #}
     <main class="hub-center">
       <section class="chat-wrapper">
 
@@ -107,21 +160,6 @@
               <h1 class="mb-0">Select a channel</h1>
             {% endif %}
           </div>
-          {% if selected_channel %}
-            <div class="channel-tags">
-              <span class="badge subtle">{{ selected_channel.kind|title }}</span>
-              {% if selected_channel.is_readonly %}
-                <span class="badge subtle">Readonly</span>
-              {% endif %}
-            </div>
-            {% if me and me.role == 'admin' %}
-              <form method="post" action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/delete" class="delete-form">
-                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                <input name="reason" type="text" placeholder="Reason (optional)" class="input small">
-                <button class="btn danger small" type="submit">Delete Channel</button>
-              </form>
-            {% endif %}
-          {% endif %}
         </header>
 
         {# Flash messages inside chat box #}
@@ -130,24 +168,12 @@
         {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
 
         <div class="chat-body" id="messages">
-          {% if selected_channel and messages and messages|length > 0 %}
+          {% if selected_channel and messages|length > 0 %}
             {% for m in messages %}
               <div class="message-card">
                 <div class="message-head">
-                  <strong>
-                    <a href="/profile/{{ m.user_id }}" class="user-link">{{ m.user_name }}</a>
-                  </strong>
-                  <span class="muted small">
-                    {{ m.created_at|date_modify('-6 hours')|date('M j, Y · h:i a') }}
-                  </span>
-                  {% if me and me.role == 'admin' %}
-                    <form method="post"
-                          action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages/{{ m.id }}/delete"
-                          style="display:inline;">
-                      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-                      <button class="btn danger tiny" type="submit" title="Delete message">🗑️</button>
-                    </form>
-                  {% endif %}
+                  <strong><a href="/profile/{{ m.user_id }}">{{ m.user_name }}</a></strong>
+                  <span class="muted small">{{ m.created_at|date_modify('+5 hours')|date('M j, Y · h:i a') }}</span>
                 </div>
                 <div class="message-body">{{ m.body }}</div>
               </div>
@@ -155,149 +181,152 @@
           {% elseif selected_channel %}
             <p class="muted empty-chat">No messages yet in #{{ selected_channel.name }}.</p>
           {% else %}
-            <div class="placeholder">
-              <p class="muted">Pick a channel on the left to view messages.</p>
-            </div>
+            <p class="muted">Pick a channel to view messages.</p>
           {% endif %}
         </div>
 
-        <div class="chat-footer">
-          {% if selected_channel and can_post %}
-            <form method="POST"
-                  action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages"
-                  class="composer">
+        {% if selected_channel and can_post %}
+          <div class="chat-footer">
+            <form method="POST" action="/groups/{{ group.slug }}/channels/{{ selected_channel.slug }}/messages" class="composer">
               <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
               <textarea name="body" rows="2" required placeholder="Write a message..." class="input"></textarea>
               <button class="btn primary" type="submit">Send</button>
             </form>
-          {% elseif selected_channel %}
-            <p class="hint small muted text-center mt-2">You can’t post in this channel.</p>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
 
       </section>
     </main>
 
-    {# RIGHT: Channel info + Create Channel #}
-    <aside class="hub-right">
-      <div class="right-card">
-        <div class="list-head">Channel Info</div>
-        {% if selected_channel %}
-          <div class="info-grid">
-            <div><span class="muted small">Name</span><div>#{{ selected_channel.name }}</div></div>
-            <div><span class="muted small">Kind</span><div>{{ selected_channel.kind|title }}</div></div>
-            {% if selected_channel.description %}
-              <div><span class="muted small">About</span><div>{{ selected_channel.description }}</div></div>
-            {% endif %}
-          </div>
-        {% else %}
-          <p class="muted small">Select a channel to see details.</p>
-        {% endif %}
-      </div>
-
-      {% if can_view and me and (me.role == 'admin' or (is_member and me.role == 'faculty')) %}
-        <div class="right-card">
-          <div class="list-head">Create a Channel</div>
-          <form method="POST" action="/groups/{{ group.slug }}/channels" class="auth-form" novalidate>
-            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-
-            <div class="field">
-              <label for="ch-name">Name</label>
-              <input id="ch-name" name="name" required placeholder="e.g., announcements, general" />
-            </div>
-
-            <div class="field">
-              <label for="ch-desc">Description <span class="muted">(optional)</span></label>
-              <input id="ch-desc" name="description" placeholder="Short description" />
-            </div>
-
-            <div class="field field-inline">
-              <input type="checkbox" id="ch-readonly" name="is_readonly" value="1">
-              <label for="ch-readonly">Read-only <span class="muted">(good for Announcements)</span></label>
-            </div>
-
-            <button class="btn primary" type="submit">Create Channel</button>
-          </form>
-        </div>
-      {% endif %}
-    </aside>
   </div>
+
+  {# ================= FLASH MESSAGES (BOTTOM) ================= #}
+  <div id="flash-container">
+    {% set f = flash() %}
+    {% for msg in f.success ?? [] %}
+      <div class="alert alert-success">{{ msg }}</div>
+    {% endfor %}
+    {% for msg in f.error ?? [] %}
+      <div class="alert alert-error">{{ msg }}</div>
+    {% endfor %}
+  </div>
+
 </div>
+
+<style>
+/* Layout */
+.hub-container { display:flex; width:100%; gap:1rem; }
+.hub-sidebar { width:300px; flex-shrink:0; display:flex; flex-direction:column; gap:1rem; }
+.sidebar-toggle { display:none; background:none; border:none; font-size:1.2rem; cursor:pointer; }
+.sidebar-content { display:flex; flex-direction:column; gap:.75rem; }
+
+/* Accordion */
+.accordion-card { border-radius:12px; overflow:hidden; background:white; display:flex; flex-direction:column; }
+.accordion-toggle { background:#f3f4f6; border:none; padding:.75rem 1rem; font-weight:600; text-align:left; cursor:pointer; width:100%; }
+.accordion-content { display:none; padding:.75rem 1rem; flex-direction:column; gap:.5rem; }
+.accordion-card.open .accordion-content { display:flex; }
+
+/* Chat */
+.hub-center { flex:1; display:flex; flex-direction:column; }
+.chat-wrapper { display:flex; flex-direction:column; height:80vh; background:white; border-radius:12px; overflow:hidden; }
+.chat-body { display:flex; flex-direction:column; gap:.5rem; flex:1 1 auto; overflow-y:auto; max-height:65vh; padding:.5rem 1rem; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb; }
+.message-card { display:flex; flex-direction:column; background:#f9fafb; border-radius:12px; padding:.5rem .75rem; border:1px solid #e5e7eb; }
+
+/* Chat input */
+.chat-footer .composer { display:flex; flex-direction:column; gap:.5rem; padding:.5rem 1rem; }
+.chat-footer textarea { resize:none; border-radius:8px; padding:.5rem; border:1px solid #ccc; width:100%; }
+
+/* Flash messages bottom */
+#flash-container {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  z-index:999;
+  max-width:90%;
+}
+#flash-container .alert { margin:0; }
+
+/* Responsive */
+@media (max-width:768px) {
+  .hub-container { flex-direction:column; margin-top:0; padding-top:0;}
+  .hub-sidebar { width:100%; order:-1; }
+  .sidebar-toggle { display:inline; }
+  .chat-body {
+    max-height: 40vh; /* shorter on mobile */
+  }
+
+
+  .chat-wwrapper{
+    height: 60vh;
+  }
+}
+</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-  // Track the last seen message id
+
+  // Accordion toggle
+  document.querySelectorAll(".accordion-toggle").forEach(btn => {
+    btn.addEventListener("click", () => btn.parentElement.classList.toggle("open"));
+  });
+
+  // Scroll helpers
+  function scrollWindowToBottom() { window.scrollTo(0, document.body.scrollHeight); }
+  function scrollChatToBottom() {
+    var chat = document.getElementById("messages");
+    if(chat) chat.scrollTop = chat.scrollHeight;
+  }
+
+  // Initial scroll
+  scrollChatToBottom();
+  scrollWindowToBottom();
+
+  // Flash messages auto-hide
+  setTimeout(() => {
+    document.querySelectorAll("#flash-container .alert").forEach(el => el.remove());
+  }, 4000);
+
+  // Long polling for messages
   var lastSeenId = {% if latest_message %}{{ latest_message.id }}{% else %}null{% endif %};
   var pollUrl = "/groups/{{ group.slug }}/poll";
   var chatBody = document.getElementById("messages");
 
-  // Helper: format timestamp with -6 hour offset, no seconds
-  function formatTimestamp(raw) {
-    var dt = new Date(raw);
-    dt.setHours(dt.getHours() - 6); // subtract 6 hours
-    return dt.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric'
-      // no 'second' field → seconds omitted
-    });
-  }
-
-  setInterval(function() {
-    fetch(pollUrl, { headers: { 'Accept': 'application/json' } })
-      .then(res => res.json())
-      .then(data => {
-        // Expecting { latest_message: { id, user_name, body, created_at } }
-        if (data.latest_message && data.latest_message.id && data.latest_message.id !== lastSeenId) {
-          lastSeenId = data.latest_message.id;
+  if (chatBody) {
+    setInterval(() => {
+      fetch(pollUrl, { headers:{ "Accept":"application/json" }})
+        .then(res => res.json())
+        .then(data => {
+          if (!data.latest_message) return;
           var m = data.latest_message;
-
-          // Build new message card
-          var card = document.createElement("div");
-          card.className = "message-card";
-          card.innerHTML = `
-            <div class="message-head">
-              <strong>
-              <a href="/profile/${m.user_id}" class="user-link">${m.user_name}</a>
-              </strong>
-              <span class="muted small">${formatTimestamp(m.created_at)}</span>
+          if (!lastSeenId || m.id > lastSeenId) {
+            lastSeenId = m.id;
+            var card = document.createElement("div");
+            card.className = "message-card";
+            var dt = new Date(m.created_at);
+            dt.setHours(dt.getHours() + 5);
+            card.innerHTML = `
+              <div class="message-head">
+                <strong><a href="/profile/${m.user_id}" class="user-link">${m.user_name}</a></strong>
+                <span class="muted small">${dt.toLocaleString(undefined,{year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric'})}</span>
               </div>
               <div class="message-body">${m.body}</div>
             `;
+            chatBody.appendChild(card);
 
-          // Append to chat body
-          chatBody.appendChild(card);
+            // Scroll chat and window to bottom
+            scrollChatToBottom();
+            scrollWindowToBottom();
+          }
+        })
+        .catch(err => console.error("Polling error:", err));
+    }, 1000);
+  }
 
-          // Auto-scroll to bottom
-          chatBody.scrollTop = chatBody.scrollHeight;
-        }
-      })
-      .catch(err => console.error("Polling error:", err));
-  }, 1000); // poll every second
-
-  // Reformat any existing server-rendered timestamps on page load
-  document.querySelectorAll(".message-head .muted.small").forEach(function(el) {
-    var raw = el.textContent.trim();
-    var dt = new Date(raw);
-    if (!isNaN(dt)) {
-      dt.setHours(dt.getHours() - 6);
-      el.textContent = dt.toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric'
-      });
-    }
-  });
 });
 </script>
-
-
-
-
-
 
 {% endblock %}

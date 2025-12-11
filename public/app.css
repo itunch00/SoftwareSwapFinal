@@ -72,14 +72,20 @@ a:hover{text-decoration:underline}
 @media (max-width:768px){.stack>*+*{margin-top:var(--space-2)}}
 
 /* Page shell (non-chat) */
-.page-wrap{
-  min-height:100vh;
-  padding:48px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:24px;
-  align-items:center;
+.page-wrap {
+  width: 100%;
+  flex: 1 0 auto;          /* key: allow it to grow to fill remaining space */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 48px 16px;
+
+  align-items: center;    /* fix horizontal stretching */
+  box-sizing: border-box;
 }
+
+
+
 .page-card{
   width:100%;
   max-width:1100px;
@@ -714,6 +720,30 @@ body.nav-open{overflow:hidden}
       width: 100%;
     }
   }
+  /* Make select match text inputs */
+.textbox-style,
+.auth-form select {
+  appearance: none;        /* Remove default browser styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: white; /* Match input background */
+  border: 1px solid #ccc;  /* Match input border */
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;      /* Match input radius */
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Optional: Add a custom dropdown arrow */
+.auth-form select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='gray' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'><path d='M5.5 7l4.5 5 4.5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  padding-right: 2rem; /* Make room for the arrow */
+}
+
   /* Notifications */
   .notif-badge {
   background: red;
@@ -783,3 +813,129 @@ body.nav-open{overflow:hidden}
     z-index: 60; /* above other elements */
   }
 }
+  /* Make select match text inputs */
+.textbox-style,
+.auth-form select {
+  appearance: none;        /* Remove default browser styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: white; /* Match input background */
+  border: 1px solid #ccc;  /* Match input border */
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;      /* Match input radius */
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Optional: Add a custom dropdown arrow */
+.auth-form select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='gray' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'><path d='M5.5 7l4.5 5 4.5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  padding-right: 2rem; /* Make room for the arrow */
+}
+/* ===========================
+   UAFS Modal — Fully Isolated
+   =========================== */
+
+:root {
+  --uafs-bg: white;
+  --uafs-text: #111;
+  --uafs-overlay: rgba(0, 0, 0, 0.65);
+  --uafs-radius: 12px;
+  --uafs-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* Overlay: fixed fullscreen */
+#uafs-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: var(--uafs-overlay) !important;
+  display: flex ;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+}
+
+/* Hidden state */
+.uafs-hidden {
+  display: none !important;
+}
+
+/* Modal box */
+#uafs-modal {
+  background: var(--uafs-bg) !important;
+  color: var(--uafs-text) !important;
+  border-radius: var(--uafs-radius) !important;
+  padding: 1.5rem !important;
+  width: 100% !important;
+  max-width: 420px !important;
+  box-shadow: var(--uafs-shadow) !important;
+  font-family: inherit !important;
+  position: relative !important;
+}
+
+/* Header */
+#uafs-modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Close button */
+#uafs-close-modal {
+  background: none !important;
+  border: none !important;
+  font-size: 1.8rem !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+}
+
+/* Fields */
+.uafs-field {
+  margin-bottom: 1rem !important;
+}
+
+.uafs-field label {
+  display: block !important;
+  margin-bottom: 0.3rem !important;
+  font-size: 0.9rem !important;
+}
+
+.uafs-field input,
+.uafs-field select {
+  width: 100% !important;
+  padding: 0.6rem !important;
+  border-radius: 6px !important;
+  border: 1px solid #bbb !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Button */
+.uafs-btn {
+  width: 100% !important;
+  padding: 0.8rem !important;
+  background: #2563eb !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+/* Muted text */
+.uafs-muted {
+  opacity: 0.65 !important;
+}
+
+/* Animation */
+@keyframes popIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+

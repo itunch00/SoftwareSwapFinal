@@ -14,13 +14,9 @@
   {% endfor %}
 
   {# Welcome #}
-  <section class="page-card" style="text-align:center;">
-    <h1>Welcome, {{ user.name }}!</h1>
-    <p class="muted">Role: {{ user.role|title }}</p>
-    <form method="post" action="/logout" class="form-inline" style="margin-top:1rem;">
-      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-      <button class="btn secondary" type="submit">Logout</button>
-    </form>
+  <section style="text-align:center; color:white;">
+  <h1>Welcome, {{ user.name }}!</h1>
+  <p>Role: {{ user.role|title }}</p>
   </section>
 
   {% if admin_groups is defined %}
@@ -96,6 +92,7 @@
     {# ================= Member: Your Groups ================= #}
     <section class="page-card" id="your-groups">
       <h2>Your Groups</h2>
+
       {% if your_groups and your_groups|length > 0 %}
         <div class="group-grid">
           {% for g in your_groups %}
@@ -104,9 +101,11 @@
                 <a href="/groups/{{ g.slug }}" class="group-name">{{ g.name }}</a>
                 <span class="badge {{ g.visibility }}">{{ g.visibility|title }}</span>
               </div>
+
               {% if g.description %}
                 <p class="group-desc">{{ g.description }}</p>
               {% endif %}
+
               {% if g.member_count is defined %}
                 <div class="small muted" style="margin-top:0.5rem;">
                   👥 {{ g.member_count }} members
@@ -115,13 +114,27 @@
             </div>
           {% endfor %}
         </div>
+
+        {# Button under the group grid #}
+        <button class="btn primary open-create-modal" style="margin-top: 1rem;">
+          + Create Group
+        </button>
+
+
       {% else %}
-        <p class="muted">You’re not part of any groups yet. Create one below to get started.</p>
+
+        <p class="muted">
+          You’re not part of any groups yet. Create one below to get started.
+        </p>
+
+        {# Button under the empty message #}
+        <button class="btn primary open-create-modal">+ Create Group</button>
+
       {% endif %}
     </section>
 
     {# ================= Explore Public Groups ================= #}
-    <section class="page-card" id="explore">
+    <section class="page-card" id="explore" style="margin-bottom: 2rem;">
       <h2>Explore Public Groups</h2>
       {% if public_groups and public_groups|length > 0 %}
         <div class="group-grid">
@@ -147,39 +160,86 @@
     </section>
   {% endif %}
 
-  {# ================= Create Group ================= #}
-  <section class="page-card" id="new-group">
-    <h2>Create a Group</h2>
+  
 
-    <form method="POST" action="/groups" class="auth-form" novalidate>
+
+
+
+</div>
+
+
+{# ================= Create Group Modal ================= #}
+<div id="uafs-modal-overlay" class="uafs-hidden">
+  <div id="uafs-modal">
+    <header id="uafs-modal-header">
+      <h2>Create a Group</h2>
+      <button type="button" id="uafs-close-modal" aria-label="Close">&times;</button>
+
+    </header>
+
+    <form method="POST" action="/groups" id="uafs-modal-form" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
 
-      <div class="field">
-        <label for="g-name">Name</label>
-        <input id="g-name"
-               name="name"
-               required
-               placeholder="e.g., CS Seniors 2025" />
+      <div class="uafs-field">
+        <label for="uafs-name">Name</label>
+        <input id="uafs-name" name="name" required placeholder="e.g., CS Seniors 2025" />
       </div>
 
-      <div class="field">
-        <label for="g-desc">Description <span class="muted">(optional)</span></label>
-        <input id="g-desc"
-               name="description"
-               placeholder="Short description" />
+      <div class="uafs-field">
+        <label for="uafs-desc">Description <span class="uafs-muted">(optional)</span></label>
+        <input id="uafs-desc" name="description" placeholder="Short description" />
       </div>
 
-      <div class="field">
-        <label for="g-vis">Visibility</label>
-        <select id="g-vis" name="visibility" required>
+      <div class="uafs-field">
+        <label for="uafs-vis">Visibility</label>
+        <select id="uafs-vis" name="visibility" required>
           <option value="public" selected>public</option>
           <option value="private">private</option>
         </select>
       </div>
 
-      <button class="btn primary" type="submit">Create Group</button>
+      <button class="uafs-btn" type="submit">Create Group</button>
     </form>
-  </section>
-
+  </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById("uafs-modal-overlay");
+  const closeBtn = document.getElementById("uafs-close-modal");
+  const openButtons = document.querySelectorAll(".open-create-modal");
+
+  console.log("Modal overlay:", overlay);
+  console.log("Close button:", closeBtn);
+
+  // OPEN buttons
+  openButtons.forEach(btn => {
+    console.log("Binding OPEN button:", btn);
+    btn.addEventListener("click", () => {
+      console.log("OPEN CLICKED");
+      overlay.classList.remove("uafs-hidden");
+    });
+  });
+
+  // CLOSE button
+  closeBtn.addEventListener("click", (e) => {
+    console.log("CLOSE button clicked:", e);
+    overlay.classList.add("uafs-hidden");
+  });
+
+  // Background close
+  overlay.addEventListener("click", (e) => {
+    console.log("Overlay clicked");
+    if (e.target === overlay) {
+      console.log("Closing from background click");
+      overlay.classList.add("uafs-hidden");
+    }
+  });
+});
+</script>
+
+
+
+
+
 {% endblock %}

@@ -3,221 +3,202 @@
 {% endblock %}
 
 {% block body %}
-	<div class="page-wrap">
-		<div class="page-card">
-			<div class="breadcrumb">
-				<a href="/home">Home</a>
-				&raquo;
-				<a href="/dms">Messages</a>
-				&raquo;
-				<span>Conversation</span>
-			</div>
+<div class="page-wrap">
 
-			<h1>Direct Message</h1>
-			{% if partner %}
-				<p class="muted small">With:
-					{{ partner.name ?? partner.display_name }}
-					({{ partner.email }})</p>
-			{% endif %}
+  <div class="page-card">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="/home">Home</a> &raquo;
+      <a href="/dms">Messages</a> &raquo;
+      <span>Conversation</span>
+    </div>
 
-			<section class="messages" style="margin-top:1rem;">
-				{% if messages and messages|length > 0 %}
-					<ul class="message-list">
-						{% for m in messages %}
-							{% set mine = (m.sender_id == me.id) %}
-							<li id="msg-{{ m.id }}" class="message {{ mine ? 'mine' : 'theirs' }}">
-								<div class="message-head">
-									<strong>
-										{% if mine %}
-											You
-										{% else %}
-											<a href="/profile/{{ partner.id }}" class="user-link">
-												{{ partner.name ?? partner.display_name ?? ('User #' ~ partner.id) }}
-											</a>
-										{% endif %}
-									</strong>
-									<span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
-								</div>
-								<div class="message-body">{{ m.body|e }}</div>
-							</li>
-						{% endfor %}
-					</ul>
-				{% else %}
-					<p class="muted">No messages yet.</p>
-				{% endif %}
-			</section>
+    <h1>Direct Message</h1>
 
-			<hr>
+    {% if partner %}
+      <p class="muted small">
+        With: {{ partner.name ?? partner.display_name }} ({{ partner.email }})
+      </p>
+    {% endif %}
 
-			<form id="dm-form" method="POST" action="/dms/{{ conv.id }}/messages" style="display:flex;flex-direction:column;gap:.5rem;">
-				<input type="hidden" name="_csrf" value="{{ csrf_token }}">
-				<div class="field">
-					<label for="body">
-						<strong>Message</strong>
-					</label>
-					<textarea id="body" name="body" rows="3" required placeholder="Write a message..."></textarea>
-					{# <div class="muted small" style="margin-top:.25rem;">Press <kbd>Ctrl/⌘</kbd> + <kbd>Enter</kbd> to send</div> #}
-				</div>
-				<div style="display:flex;gap:.5rem;justify-content:flex-end;">
-					<button class="btn primary" type="submit">Send</button>
-				</div>
-			</form>
-		</div>
-	</div>
+    <!-- Message List -->
+    <section class="messages">
+      {% if messages and messages|length > 0 %}
+        <ul class="message-list">
+          {% for m in messages %}
+            {% set mine = (m.sender_id == me.id) %}
+            <li id="msg-{{ m.id }}" class="message {{ mine ? 'mine' : 'theirs' }}">
+              <div class="message-head">
+                <strong>
+                  {% if mine %}
+                    You
+                  {% else %}
+                    <a href="/profile/{{ partner.id }}" class="user-link">
+                      {{ partner.name ?? partner.display_name ?? ('User #' ~ partner.id) }}
+                    </a>
+                  {% endif %}
+                </strong>
+                <span class="muted small">{{ m.created_at|date('M j, Y · h:i a') }}</span>
+              </div>
+              <div class="message-body">{{ m.body|e }}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No messages yet.</p>
+      {% endif %}
+    </section>
 
-	<script>
-		(function () { // Auto-focus composer
-var ta = document.getElementById('body');
-if (ta) 
-ta.focus();
+    <!-- Composer -->
+    <form id="dm-form" method="POST" action="/dms/{{ conv.id }}/messages" class="message-composer">
+      <input type="hidden" name="_csrf" value="{{ csrf_token }}">
 
+      <!-- Divider -->
+      <div class="composer-divider"></div>
 
+      <textarea id="body" name="body" rows="3" placeholder="Write a message..." required></textarea>
+      <button class="btn primary" type="submit">Send</button>
+    </form>
+  </div>
+</div>
 
-// Auto-scroll to bottom of messages on load
-var list = document.querySelector('.message-list');
-if (list) 
-list.scrollTop = list.scrollHeight;
+<!-- Scripts -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Auto-focus composer
+  const ta = document.getElementById('body');
+  if (ta) ta.focus();
 
+  // Auto-scroll to bottom of messages on load
+  const list = document.querySelector('.message-list');
+  if (list) list.scrollTop = list.scrollHeight;
 
+  // Cmd/Ctrl+Enter to submit
+  if (ta) {
+    ta.addEventListener('keydown', function(e) {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const combo = (isMac && e.metaKey && e.key === 'Enter') || (!isMac && e.ctrlKey && e.key === 'Enter');
+      if (combo) {
+        e.preventDefault();
+        document.getElementById('dm-form').submit();
+      }
+    });
+  }
 
-// Cmd/Ctrl+Enter to submit
-if (ta) {
-ta.addEventListener('keydown', function (e) {
-var isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-var combo = (isMac && e.metaKey && e.key === 'Enter') || (! isMac && e.ctrlKey && e.key === 'Enter');
-if (combo) {
-e.preventDefault();
-var form = document.getElementById('dm-form');
-if (form) 
-form.submit();
+  // Poll new messages every 1 second
+  let lastSeenId = {{ messages|last ? messages|last.id : 'null' }};
+  const pollUrl = "/dms/{{ conv.id }}/poll";
+  const msgList = document.querySelector(".message-list");
 
+  function formatTimestamp(raw) {
+    const dt = new Date(raw);
+    dt.setHours(dt.getHours() - 6);
+    return dt.toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+  }
 
-}
+  setInterval(() => {
+    fetch(pollUrl, { headers: { "Accept": "application/json" } })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.latest_message) return;
+        const m = data.latest_message;
+        if (!lastSeenId || m.id > lastSeenId) {
+          lastSeenId = m.id;
+          const mine = (m.sender_id == {{ me.id }});
+          const li = document.createElement("li");
+          li.id = "msg-" + m.id;
+          li.className = "message " + (mine ? "mine" : "theirs");
+          li.innerHTML = `
+            <div class="message-head">
+              <strong>${mine ? "You" : "{{ partner.name ?? partner.display_name ?? ('User #' ~ partner.id) }}"} </strong>
+              <span class="muted small">${formatTimestamp(m.created_at)}</span>
+            </div>
+            <div class="message-body">${m.body}</div>
+          `;
+          msgList.appendChild(li);
+          msgList.scrollTop = msgList.scrollHeight;
+        }
+      })
+      .catch(err => console.error("DM Poll Error:", err));
+  }, 1000);
 });
+</script>
+
+<!-- Styles -->
+<style>
+/* Messages */
+.message-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
 }
-})();
-	</script>
 
-	<style>
-		.message-list {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
-			max-height: 60vh;
-			overflow: auto;
-		}
-		.message {
-			border: 1px solid var(--border, #e5e7eb);
-			border-radius: 14px;
-			padding: 0.5rem 0.75rem;
-			max-width: 72%;
-			display: flex;
-			flex-direction: column;
-			gap: 0.25rem;
-		}
-		.message .message-head {
-			display: flex;
-			justify-content: space-between;
-			gap: 0.75rem;
-		}
-		/* Received (left) */
-		.message.theirs {
-			align-self: flex-start;
-			background: #f3f4f6; /* gray-100 */
-			border-color: #e5e7eb; /* gray-200 */
-		}
-		/* Sent (right) */
-		.message.mine {
-			align-self: flex-end;
-			background: #e6f2ff; /* light blue */
-			border-color: #b3d4ff; /* blue-200 */
-		}
-		.message-body {
-			white-space: pre-wrap;
-		}
-	</style>
-	{% set partnerDisplayName =
-		partner.display_name is not empty
-			? partner.display_name
-			: (partner.name is not empty ? partner.name : 'User #' ~ partner.id)
-	%}
-	<script>
-		document.addEventListener("DOMContentLoaded", function() {
+.message {
+  border-radius: 14px;
+  padding: 0.5rem 0.75rem;
+  max-width: 72%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
 
-		// Track latest message ID
-		var lastSeenId = {{ messages|last ? messages|last.id : 'null' }};
+.message-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
 
-		var pollUrl = "/dms/{{ conv.id }}/poll";
-		var msgList = document.querySelector(".message-list");
+.message-body {
+  white-space: pre-wrap;
+}
 
-		// Helper: timestamp formatting with -6 hour offset
-		function formatTimestamp(raw) {
-			var dt = new Date(raw);
-			dt.setHours(dt.getHours() - 6); // -6 hours
-			return dt.toLocaleString(undefined, {
-			year: 'numeric',
-			month: 'numeric',
-			day: 'numeric',
-			hour: 'numeric',
-			minute: 'numeric'
-			// no seconds—matches group behavior
-			});
-		}
+/* Sent vs Received */
+.message.mine {
+  align-self: flex-end;
+  background: #e6f2ff;
+  border: 1px solid #b3d4ff;
+}
 
-		// Polling loop (every 1 second)
-		setInterval(function() {
-			fetch(pollUrl, { headers: { "Accept": "application/json" }})
-			.then(res => res.json())
-			.then(data => {
-				if (!data.latest_message) return;
+.message.theirs {
+  align-self: flex-start;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
 
-				var m = data.latest_message;
+/* Composer */
+.message-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
 
-				if (!lastSeenId || m.id > lastSeenId) {
-				lastSeenId = m.id;
+.message-composer textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  resize: none; /* disable resizing */
+}
 
-				var mine = (m.sender_id == {{ me.id }});
+.message-composer button {
+  align-self: flex-end;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+}
 
-				// Build DOM node
-				var li = document.createElement("li");
-				li.id = "msg-" + m.id;
-				li.className = "message " + (mine ? "mine" : "theirs");
-
-				li.innerHTML = `
-					<div class="message-head">
-					<strong>${mine ? "You" : "{{ partnerDisplayName|e }}"}</strong>
-					<span class="muted small">${formatTimestamp(m.created_at)}</span>
-					</div>
-					<div class="message-body">${m.body}</div>
-				`;
-
-				msgList.appendChild(li);
-
-				// Scroll to bottom
-				msgList.scrollTop = msgList.scrollHeight;
-				}
-			})
-			.catch(err => console.error("DM Poll Error:", err));
-		}, 1000);
-
-		// Reformat EXISTING timestamps (server-rendered)
-		document.querySelectorAll(".message .message-head .muted.small").forEach(function(el) {
-			var raw = el.textContent.trim();
-			var dt = new Date(raw);
-			if (!isNaN(dt)) {
-			dt.setHours(dt.getHours() - 6);
-			el.textContent = dt.toLocaleString(undefined, {
-				year: 'numeric',
-				month: 'numeric',
-				day: 'numeric',
-				hour: 'numeric',
-				minute: 'numeric'
-			});
-			}
-		});
-		});
-	</script>
+/* Divider */
+.composer-divider {
+  width: 100%;
+  height: 1px;
+  background: #e5e7eb;
+  margin-bottom: 0.5rem;
+}
+</style>
 {% endblock %}
