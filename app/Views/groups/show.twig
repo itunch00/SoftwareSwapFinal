@@ -162,6 +162,11 @@
           </div>
         </header>
 
+        {# Flash messages inside chat box #}
+        {% set f = flash() %}
+        {% for msg in f.success ?? [] %}<div class="alert alert-success">{{ msg }}</div>{% endfor %}
+        {% for msg in f.error ?? [] %}<div class="alert alert-error">{{ msg }}</div>{% endfor %}
+
         <div class="chat-body" id="messages">
           {% if selected_channel and messages|length > 0 %}
             {% for m in messages %}
